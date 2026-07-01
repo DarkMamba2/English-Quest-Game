@@ -1,0 +1,3111 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="classic">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Quest: Roguelike, Academy & Chronicles - Grade 8</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Quicksand:wght@400;600;700&family=Azeret+Mono&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+fontFamily: {
+sans: ['Quicksand', 'sans-serif'],
+mono: ['Azeret Mono', 'monospace'],
+fantasy: ['Cinzel', 'serif']
+},
+colors: {
+darkBg: 'rgb(var(--bg) / <alpha-value>)',
+darkCard: 'rgb(var(--card) / <alpha-value>)',
+darkBorder: 'rgb(var(--border) / <alpha-value>)',
+gold: 'rgb(var(--primary) / <alpha-value>)',
+accentHover: 'rgb(var(--primary-hover) / <alpha-value>)',
+accentLight: 'rgb(var(--primary-light) / <alpha-value>)',
+remover: '#64748b'
+},
+boxShadow: {
+'glow-teal': '0 0 20px -3px rgba(45, 212, 191, 0.4)',
+'glow-rose': '0 0 20px -3px rgba(244, 63, 94, 0.4)',
+'glow-purple': '0 0 20px -3px rgba(168, 85, 247, 0.4)',
+'glow-gold': 'var(--glow-shadow)'
+}
+}
+}
+}
+</script>
+<style>
+:root, [data-theme="classic"] {
+--bg: 9 13 22;
+--card: 19 25 38;
+--border: 34 47 71;
+--primary: 251 191 36;
+--primary-hover: 217 119 6;
+--primary-light: 253 230 138;
+--glow-shadow: 0 0 25px -3px rgba(251, 191, 36, 0.5);
+}
+[data-theme="frozen"] {
+--bg: 6 20 29;
+--card: 13 35 48;
+--border: 30 66 89;
+--primary: 45 212 191;
+--primary-hover: 13 148 136;
+--primary-light: 153 246 228;
+--glow-shadow: 0 0 25px -3px rgba(45, 212, 191, 0.5);
+}
+[data-theme="inferno"] {
+--bg: 20 10 12;
+--card: 36 16 19;
+--border: 69 26 32;
+--primary: 244 63 94;
+--primary-hover: 225 29 72;
+--primary-light: 255 228 230;
+--glow-shadow: 0 0 25px -3px rgba(244, 63, 94, 0.5);
+}
+body { background-color: rgb(var(--bg)); color: #f1f5f9; overflow-x: hidden; transition: background-color 0.3s ease; }
+.glass-card { background: rgba(var(--card) / 0.85); backdrop-filter: blur(12px); border: 1px solid rgb(var(--border)); transition: all 0.3s ease; }
+.merchant-item { transition: all 0.2s ease; }
+.merchant-item:hover { transform: translateY(-3px); border-color: rgb(var(--primary)); }
+.monster-shake { animation: shake 0.4s ease-in-out; }
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+20%, 60% { transform: translateX(-8px); }
+40%, 80% { transform: translateX(8px); }
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgb(var(--bg)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--border)); border-radius: 10px; }
+.level-badge { font-weight: bold; padding: 2px 8px; border-radius: 6px; border-width: 1px; font-size: 0.75rem; }
+.vocab-word {
+transition: all 0.2s ease;
+cursor: help;
+}
+</style>
+</head>
+<body class="p-3 md:p-6 antialiased">
+<!-- LOADING SCREEN OVERLAY -->
+<div id="loading-overlay" class="fixed inset-0 bg-darkBg z-50 flex flex-col items-center justify-center p-4">
+<div class="text-7xl text-gold animate-spin mb-4"><i class="fa-solid fa-ring"></i></div>
+<h2 class="text-2xl font-fantasy tracking-widest text-gold">LOADING DUNGEON CLOUD...</h2>
+<p class="text-xs text-remover mt-2">Menghubungkan ke Google Firebase Firestore</p>
+</div>
+<!-- OVERLAY QUIZ MODAL -->
+<div id="quiz-modal" class="hidden fixed inset-0 bg-darkBg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="glass-card w-full max-w-2xl rounded-3xl p-6 md:p-8 relative border-gold/30 shadow-glow-gold">
+<button onclick="closeQuiz()" class="absolute top-5 right-5 text-remover hover:text-rose-400 transition"><i class="fa-solid fa-times text-xl"></i></button>
+<div id="quiz-content" class="space-y-6"></div>
+</div>
+</div>
+<!-- TOME OF KNOWLEDGE MODAL -->
+<div id="tome-modal" class="hidden fixed inset-0 bg-darkBg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="glass-card w-full max-w-xl rounded-3xl p-6 relative border-indigo-500/30 shadow-glow-purple flex flex-col max-h-[85vh]">
+<button onclick="closeTomeOfKnowledge()" class="absolute top-5 right-5 text-remover hover:text-rose-400 transition"><i class="fa-solid fa-times text-xl"></i></button>
+<h3 class="text-2xl font-fantasy text-indigo-400 mb-2 flex items-center gap-2">📖 Tome of Knowledge</h3>
+<p class="text-xs text-remover mb-4 leading-relaxed">Koleksi kosa kata langka yang kamu temukan di dalam dungeon. Gunakan kata-kata ini saat merangkai kalimat attack untuk mengaktifkan bonus damage multiplikatif yang dahsyat!</p>
+<div id="tome-list" class="flex-grow overflow-y-auto space-y-3 pr-1"></div>
+</div>
+</div>
+<!-- INVENTORY ITEM INTERACTION MODAL -->
+<div id="item-action-modal" class="hidden fixed inset-0 bg-darkBg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="glass-card w-full max-w-sm rounded-3xl p-6 text-center space-y-4 border-gold/30 shadow-glow-gold relative">
+<button onclick="closeItemActionModal()" class="absolute top-4 right-4 text-remover hover:text-rose-400 transition"><i class="fa-solid fa-times text-lg"></i></button>
+<div id="item-action-content" class="space-y-4"></div>
+</div>
+</div>
+<!-- DYNAMIC VOCABULARY HOVER CARD -->
+<div id="vocab-tooltip" class="hidden absolute z-[100] glass-card border border-indigo-500/50 bg-slate-950/95 text-f1f5f9 text-xs rounded-2xl p-3 shadow-glow-purple max-w-[280px] pointer-events-none transition-opacity duration-150">
+<div class="flex justify-between items-center border-b border-indigo-500/20 pb-1 mb-1.5 gap-2">
+<h5 id="tooltip-word" class="font-fantasy font-bold text-gold capitalize text-sm">Word</h5>
+<span id="tooltip-type" class="text-[8px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">TYPE</span>
+</div>
+<p id="tooltip-trans" class="text-emerald-400 italic font-bold mb-1">Arti: Loading...</p>
+<p id="tooltip-def" class="text-slate-300 text-[10px] leading-snug">Definisi kontekstual...</p>
+</div>
+<!-- MAIN HEADER -->
+<header class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b border-darkBorder gap-4">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-dungeon text-gold text-3xl animate-pulse"></i>
+<h1 id="main-title" class="text-2xl md:text-3xl font-fantasy bg-clip-text text-transparent bg-gradient-to-r from-gold to-accentLight cursor-pointer select-none">
+ENGLISH QUEST: PORTAL
+</h1>
+</div>
+<div class="flex items-center gap-1.5 bg-darkCard border border-darkBorder p-1 rounded-xl text-xs">
+<button id="btn-theme-classic" onclick="setTheme('classic')" class="px-2.5 py-1 rounded-md text-remover transition-all">🏰 Classic</button>
+<button id="btn-theme-frozen" onclick="setTheme('frozen')" class="px-2.5 py-1 rounded-md text-remover transition-all">❄️ Frozen</button>
+<button id="btn-theme-inferno" onclick="setTheme('inferno')" class="px-2.5 py-1 rounded-md text-remover transition-all">🔥 Inferno</button>
+</div>
+<div id="user-pills" class="flex gap-2 hidden">
+<div class="glass-card px-4 py-2 rounded-full flex items-center gap-2 text-sm border-gold/30">
+<i class="fa-solid fa-circle text-emerald-500 text-xs animate-ping"></i>
+<span id="pills-name">Adventurer</span>
+</div>
+<button onclick="logout()" class="glass-card px-4 py-2 rounded-full text-sm text-rose-400 hover:bg-rose-500/10 border-rose-500/30"><i class="fa-solid fa-sign-out-alt"></i></button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto">
+<!-- AUTH SECTION -->
+<section id="auth-section" class="max-w-lg mx-auto glass-card p-10 rounded-3xl shadow-2xl space-y-6 mt-16 border-gold/20">
+<div class="text-center">
+<h2 class="text-3xl font-fantasy text-gold">Dungeon Portal</h2>
+<p class="text-remover mt-2">Daftar atau Masuk untuk menyinkronkan data petualanganmu secara online</p>
+</div>
+<div class="space-y-4">
+<div class="relative">
+<i class="fa-solid fa-user-ninja absolute left-4 top-4 text-remover"></i>
+<input type="text" id="auth-name" placeholder="Nama Lengkap Siswa" class="w-full bg-darkBg border border-darkBorder p-4 pl-12 rounded-2xl focus:ring-2 focus:ring-gold outline-none transition text-f1f5f9">
+</div>
+<div class="relative">
+<i class="fa-solid fa-key absolute left-4 top-4 text-remover"></i>
+<input type="password" id="auth-pass" placeholder="Password Rahasia" class="w-full bg-darkBg border border-darkBorder p-4 pl-12 rounded-2xl focus:ring-2 focus:ring-gold outline-none transition text-f1f5f9">
+</div>
+<div class="flex gap-3 pt-2">
+<button id="btn-login" onclick="auth('login')" class="flex-1 bg-accentHover hover:bg-gold py-4 rounded-2xl font-bold transition flex items-center justify-center gap-2 text-darkBg">
+<i class="fa-solid fa-door-open"></i> Masuk Game
+</button>
+<button id="btn-signup" onclick="auth('signup')" class="flex-1 bg-darkCard hover:bg-gold/10 py-4 rounded-2xl font-bold transition text-gold border border-accentHover/40 hover:border-gold/60 shadow-sm">
+Daftar Akun
+</button>
+</div>
+</div>
+</section>
+<!-- GAMEPLAY SECTION -->
+<section id="student-section" class="hidden grid grid-cols-1 xl:grid-cols-4 gap-6">
+<!-- LEFT COLUMN -->
+<div class="xl:col-span-1 space-y-6">
+<div class="glass-card p-6 rounded-3xl space-y-5 border-gold/20 relative overflow-hidden">
+<div class="absolute -top-10 -right-10 text-9xl text-gold/5 transform rotate-12"><i class="fa-solid fa-scroll"></i></div>
+<div class="flex items-center gap-4 relative">
+<div id="avatar" class="w-16 h-16 bg-gradient-to-br from-gold to-accentHover rounded-2xl flex items-center justify-center text-3xl shadow-lg border border-gold/30">😊</div>
+<div>
+<h3 id="display-name" class="text-xl font-bold font-fantasy text-gold">Player</h3>
+<span id="level-badge" class="level-badge border-rose-500 text-rose-400 bg-rose-500/10">LEVEL D</span>
+</div>
+</div>
+<button onclick="openTomeOfKnowledge()" class="w-full mt-2 bg-indigo-600/30 border border-indigo-500/40 hover:bg-indigo-600/50 text-indigo-300 py-2.5 rounded-2xl text-xs font-bold font-fantasy flex items-center justify-center gap-1.5 transition duration-250">
+📖 TOME OF KNOWLEDGE
+</button>
+<div class="space-y-3 pt-4 border-t border-darkBorder">
+<div class="flex justify-between items-end">
+<span class="text-xs text-remover">Nilai Rapor Akademik</span>
+<span id="display-score" class="text-3xl font-bold text-emerald-400 font-mono">0</span>
+</div>
+<div class="w-full bg-darkBg h-2.5 rounded-full overflow-hidden border border-darkBorder">
+<div id="xp-bar" class="bg-gradient-to-r from-gold to-emerald-500 h-full transition-all duration-1000 w-0"></div>
+</div>
+<div class="flex justify-between text-[11px] text-remover">
+<span>Total XP: <span id="display-xp-total" class="text-f1f5f9">0</span></span>
+<span id="display-xp-needed">0 / 256 XP</span>
+</div>
+<div class="pt-2 border-t border-darkBorder/40 flex justify-between items-center">
+<span class="text-xs text-remover">Dungeon PB Score:</span>
+<span id="display-dungeon-pb" class="text-xs font-bold text-gold font-mono">0</span>
+</div>
+</div>
+<div id="run-stats-card" class="space-y-3 pt-4 border-t border-darkBorder hidden">
+<div class="flex justify-between items-center">
+<span class="text-xs text-remover">Dungeon Stage</span>
+<span id="run-stage" class="text-lg font-bold text-gold font-mono">1</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-xs text-remover">Health Points (HP)</span>
+<span id="run-hp" class="text-md font-bold text-rose-400 font-mono">100 / 100</span>
+</div>
+<div class="w-full bg-darkBg h-2 rounded-full overflow-hidden border border-darkBorder">
+<div id="hp-bar-inner" class="bg-gradient-to-r from-rose-500 to-rose-400 h-full transition-all duration-300 w-full"></div>
+</div>
+<div class="flex justify-between items-center pt-2">
+<span class="text-xs text-remover">Gold Coins</span>
+<span class="text-gold font-bold font-mono"><i class="fa-solid fa-coins"></i> <span id="run-gold">0</span></span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-xs text-remover">Current Run Score</span>
+<span id="run-score" class="text-teal-400 font-bold font-mono">0</span>
+</div>
+<div class="pt-3 border-t border-darkBorder/60">
+<p class="text-[10px] text-gold font-bold font-fantasy mb-1.5"><i class="fa-solid fa-layer-group"></i> Stacked Buff Stats:</p>
+<div class="grid grid-cols-2 gap-1.5 text-[10px] bg-darkBg/50 p-2 rounded-xl border border-darkBorder">
+<div class="text-remover">🛡️ Block: <span id="stat-total-block" class="text-teal-400 font-bold font-mono">0</span></div>
+<div class="text-remover">💰 Gold Boost: <span id="stat-gold-boost" class="text-amber-400 font-bold font-mono">1.0x</span></div>
+<div class="text-remover">⚔️ ATK Bonus: <span id="stat-flat-atk" class="text-rose-400 font-bold font-mono">+0</span></div>
+<div class="text-remover">📖 Tense Mult: <span id="stat-tense-bonus" class="text-indigo-400 font-bold font-mono">+0.0x</span></div>
+</div>
+</div>
+<div class="pt-2 border-t border-darkBorder/40">
+<p class="text-[10px] text-remover mb-1">Active Weapon (Click Bag to Change):</p>
+<div class="flex items-center gap-2 p-1.5 bg-darkBg/60 rounded-xl border border-darkBorder">
+<span id="weapon-icon" class="text-xl">🗡️</span>
+<div>
+<p id="weapon-name" class="text-[11px] font-bold text-f1f5f9">Rusty Dagger</p>
+<p class="text-[9px] text-remover">Atk: <span id="weapon-atk-info">10</span></p>
+</div>
+</div>
+</div>
+<div class="pt-1">
+<p class="text-[10px] text-remover mb-1">Inventory Bag (Click item to Use/Equip/Sell):</p>
+<div id="inventory-list" class="grid grid-cols-5 gap-1 max-h-[110px] overflow-y-auto p-1 bg-darkBg/30 rounded-lg border border-darkBorder"></div>
+</div>
+</div>
+<button id="btn-return-hub" onclick="switchToHub()" class="hidden w-full bg-darkCard border border-darkBorder text-gold py-2.5 rounded-2xl text-xs font-bold font-fantasy hover:bg-gold/10 transition">
+🔄 KEMBALI KE HUB MODE
+</button>
+</div>
+</div>
+<!-- CENTER COLUMN -->
+<div class="xl:col-span-2 glass-card p-5 rounded-3xl h-[680px] flex flex-col justify-between border-darkBorder relative overflow-hidden">
+<!-- VIEW 1: HUB -->
+<div id="view-hub" class="flex flex-col justify-center items-center h-full space-y-6 text-center">
+<div class="text-6xl text-gold"><i class="fa-solid fa-gamepad"></i></div>
+<div>
+<h3 class="text-2xl font-fantasy text-gold">Pilih Jalur Petualanganmu</h3>
+<p class="text-sm text-remover max-w-sm mt-1">Pilih metode belajarmu hari ini, hadapi kuis kurikulum sekolah, jelajahi dungeon yang menantang, atau masuki cerita visual novel!</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full pt-4">
+<div onclick="switchToAcademy()" class="glass-card p-4 rounded-2xl text-left border-gold/25 hover:border-gold shadow-sm cursor-pointer transition transform hover:-translate-y-1">
+<div class="text-3xl mb-2 text-gold"><i class="fa-solid fa-scroll"></i></div>
+<h4 class="font-fantasy font-bold text-sm text-f1f5f9">Academy Quests</h4>
+<p class="text-[10px] text-remover mt-1 leading-snug">Selesaikan kuis interaktif kurikulum sekolah untuk meraih XP dan menaikkan Nilai Rapor Akademik!</p>
+</div>
+<div onclick="switchToDungeon()" class="glass-card p-4 rounded-2xl text-left border-rose-500/25 hover:border-rose-500 shadow-sm cursor-pointer transition transform hover:-translate-y-1">
+<div class="text-3xl mb-2 text-rose-400"><i class="fa-solid fa-shield-halved"></i></div>
+<h4 class="font-fantasy font-bold text-sm text-f1f5f9">Dungeon Crawler</h4>
+<p class="text-[10px] text-remover mt-1 leading-snug">Lawan monster dengan menyusun kalimat dinamis tata bahasa Inggris dan perluas kosa kata barumu!</p>
+</div>
+<div onclick="switchToStoryPortal()" class="glass-card p-4 rounded-2xl text-left border-indigo-500/25 hover:border-indigo-500 shadow-sm cursor-pointer transition transform hover:-translate-y-1">
+<div class="text-3xl mb-2 text-indigo-400"><i class="fa-solid fa-book-open"></i></div>
+<h4 class="font-fantasy font-bold text-sm text-f1f5f9">Chronicles of Choice</h4>
+<p class="text-[10px] text-remover mt-1 leading-snug">Jelajahi kisah bergambar (Horor, Detektif, Petualangan). Setiap keputusanmu memiliki konsekuensi nyata!</p>
+</div>
+</div>
+</div>
+<!-- VIEW 2: ACADEMY -->
+<div id="view-academy" class="hidden flex flex-col h-full justify-between overflow-hidden">
+<div class="flex justify-between items-center border-b border-darkBorder pb-4">
+<div>
+<h3 class="text-xl font-fantasy text-f1f5f9 flex items-center gap-2">
+<i class="fa-solid fa-scroll text-gold"></i> Papan Quest Semester
+</h3>
+<p class="text-xs text-remover mt-0.5">Selesaikan kuis di bawah ini secara sempurna untuk menaikkan nilai akademikmu.</p>
+</div>
+<span id="quest-count" class="text-xs text-remover font-mono bg-darkBg px-2 py-1 rounded border border-darkBorder">0 quests available</span>
+</div>
+<div id="quest-list" class="flex-grow overflow-y-auto space-y-3 py-4 pr-1"></div>
+</div>
+<!-- VIEW 3: DUNGEON -->
+<div id="view-dungeon" class="hidden flex flex-col h-full justify-between overflow-hidden">
+<div id="screen-idle" class="flex flex-col items-center justify-center h-full text-center space-y-4">
+<div class="text-8xl text-darkBorder animate-bounce"><i class="fa-solid fa-skull-crossbones"></i></div>
+<h3 class="text-2xl font-fantasy text-gold">Siap Menjelajahi Dungeon?</h3>
+<p class="text-sm text-remover max-w-sm">Dungeon dibangkitkan secara prosedural. Jawab, buat kalimat gramatikal, perluas kosa kata, dan kalahkan monster!</p>
+<button onclick="startDungeonRun()" class="bg-gold hover:bg-accentHover text-darkBg px-8 py-3.5 rounded-2xl font-fantasy font-bold shadow-glow-gold transition">
+MASUK DUNGEON RUN ⚔️
+</button>
+</div>
+<div id="screen-run" class="hidden flex flex-col h-full justify-between">
+<div class="flex justify-between items-center border-b border-darkBorder pb-2">
+<div>
+<span id="encounter-badge" class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-gold/20 text-gold border border-gold/30">MONSTER ENCOUNTER</span>
+<h3 id="encounter-title" class="text-lg font-fantasy text-f1f5f9 mt-0.5">Lantai 1: Gerbang Gua</h3>
+</div>
+<div class="text-right">
+<p class="text-[9px] text-remover">Run Score</p>
+<p id="encounter-stage-score" class="text-md font-bold text-teal-400 font-mono">0</p>
+</div>
+</div>
+<div class="flex-grow flex flex-col justify-center py-2 overflow-hidden">
+<div id="view-battle" class="hidden flex flex-col space-y-3">
+<div class="grid grid-cols-12 gap-3 items-center p-3 bg-darkBg/60 rounded-2xl border border-darkBorder shadow-inner relative">
+<div class="col-span-5 flex items-center gap-3">
+<div class="text-3xl md:text-4xl bg-darkCard/80 p-1.5 rounded-xl border border-darkBorder flex items-center justify-center">🧙‍♂️</div>
+<div class="text-left leading-tight">
+<p class="font-bold text-xs text-f1f5f9">Adventurer</p>
+<p id="battle-player-hp" class="text-[10px] text-rose-400 font-mono font-bold">HP: 100/100</p>
+</div>
+</div>
+<div class="col-span-2 text-center flex flex-col items-center justify-center">
+<span class="px-2.5 py-0.5 rounded bg-rose-600/20 text-rose-400 font-fantasy text-[10px] border border-rose-500/40 animate-pulse shadow-sm">VS</span>
+</div>
+<div id="monster-sprite-container" class="col-span-5 flex items-center justify-end gap-3 text-right">
+<div class="text-right leading-tight">
+<p id="monster-name" class="font-bold text-xs text-rose-400">Grammar Goblin</p>
+<p id="battle-monster-hp" class="text-[10px] text-emerald-400 font-mono font-bold">HP: 40/40</p>
+<div class="w-16 bg-darkBg h-1 rounded-full overflow-hidden mt-1 border border-darkBorder ml-auto">
+<div id="monster-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+</div>
+</div>
+<div id="monster-icon" class="text-3xl md:text-4xl bg-darkCard/80 p-1.5 rounded-xl border border-darkBorder flex items-center justify-center">👹</div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="p-2.5 bg-indigo-950/40 border border-indigo-500/30 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-1.5">
+<div class="flex items-center gap-1.5">
+<i class="fa-solid fa-bolt text-indigo-400 animate-pulse text-[11px]"></i>
+<span class="text-[10px] text-indigo-300 font-bold uppercase tracking-wide">Tense Boost Target:</span>
+</div>
+<span id="tense-boost-multiplier" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-500 text-white animate-pulse inline-block text-center">Present Tense (2x ATK)</span>
+</div>
+<p id="tense-boost-description" class="text-[10px] text-remover italic px-1">Tulis kalimat menggunakan Simple Present (is/am/are/do/does atau kata kerja dasar).</p>
+<div class="relative">
+<textarea id="sentence-input" placeholder="Tulis kalimat bahasa Inggrismu di sini untuk menyerang monster... Tip: Gunakan kata langka dari Tome untuk bonus luar biasa!" class="w-full bg-darkBg border border-darkBorder p-3 rounded-2xl focus:ring-2 focus:ring-gold outline-none text-xs h-20 resize-none transition-all text-f1f5f9" rows="2"></textarea>
+<div id="analysis-feedback" class="absolute bottom-2.5 right-3 text-[9px] text-remover bg-darkCard/90 px-1.5 py-0.5 rounded border border-darkBorder">
+Analyzer Online
+</div>
+</div>
+<div class="grid grid-cols-3 gap-1.5 text-[10px]">
+<div class="bg-darkBg p-1.5 rounded-xl border border-darkBorder text-center">
+<span class="text-remover block text-[8px] uppercase">Vocab Mul</span>
+<span class="font-bold text-gold font-mono" id="vocab-multiplier-info">1.0x</span>
+</div>
+<div class="bg-darkBg p-1.5 rounded-xl border border-darkBorder text-center">
+<span class="text-remover block text-[8px] uppercase">Tense Boost</span>
+<span class="font-bold text-indigo-400 font-mono" id="tense-multiplier-info">1.0x</span>
+</div>
+<div class="bg-darkBg p-1.5 rounded-xl border border-darkBorder text-center">
+<span class="text-remover block text-[8px] uppercase">Weapon ATK</span>
+<span class="font-bold text-rose-400 font-mono" id="weapon-atk-field">10</span>
+</div>
+</div>
+<button id="attack-btn" onclick="executeBattleTurn()" class="w-full bg-rose-600 hover:bg-rose-500 py-3 rounded-xl font-bold font-fantasy text-f1f5f9 shadow-glow-rose hover:shadow-rose-500/30 transition flex items-center justify-center gap-2 text-xs">
+<i class="fa-solid fa-wand-sparkles"></i> EXECUTING ATTACK SENTENCE!
+</button>
+</div>
+</div>
+<div id="view-chest" class="hidden flex flex-col items-center justify-center text-center space-y-6 py-6">
+<div class="text-8xl text-gold animate-bounce"><i class="fa-solid fa-box-open"></i></div>
+<div>
+<h4 class="text-2xl font-fantasy text-gold">TREASURE CHEST ENCOUNTER!</h4>
+<p class="text-sm text-remover max-w-sm mx-auto mt-1">Kamu menemukan peti harta karun kuno tersembunyi di sudut gua. Klik di bawah untuk membukanya!</p>
+</div>
+<button onclick="openTreasureChest()" class="bg-gold text-darkBg hover:bg-accentLight px-8 py-3.5 rounded-2xl font-fantasy font-bold shadow-glow-gold transition">
+BUKA PETI HARTA 🗝️
+</button>
+</div>
+<div id="view-merchant" class="hidden flex flex-col space-y-4">
+<div class="text-center">
+<h4 class="text-xl font-fantasy text-gold"><i class="fa-solid fa-store"></i> Mystical Merchant</h4>
+<p class="text-xs text-remover">Gunakan Gold koin yang didapat dari monster/peti untuk upgrade persenjataan Anda.</p>
+</div>
+<div id="merchant-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1"></div>
+<button onclick="finishMerchantEncounter()" class="w-full bg-darkBorder border border-darkBorder hover:bg-remover/20 py-3 rounded-2xl font-fantasy font-bold transition">
+SELESAI BELANJA & LANJUTKAN RUN ➔
+</button>
+</div>
+<div id="view-result" class="hidden flex flex-col items-center justify-center text-center space-y-4 py-8">
+<div class="text-7xl text-emerald-400"><i class="fa-solid fa-circle-check"></i></div>
+<h4 class="text-2xl font-fantasy text-emerald-400">STAGE CLEAR!</h4>
+<p id="result-description" class="text-sm text-remover max-w-sm"></p>
+<button onclick="advanceToNextStage()" class="bg-emerald-600 hover:bg-emerald-500 px-8 py-3 rounded-xl font-fantasy font-bold transition">
+LANJUT KE STAGE BERIKUTNYA ➔
+</button>
+</div>
+</div>
+<div class="border-t border-darkBorder pt-2.5 flex justify-between items-center text-[11px] text-remover">
+<span>Unique Vocab Run: <span id="vocab-run-count" class="font-bold text-gold">0</span> words</span>
+<button onclick="abandonRun()" class="text-rose-400 hover:underline">Menyerah & Akhiri Run</button>
+</div>
+</div>
+</div>
+<!-- VIEW 4: CHRONICLES OF CHOICE -->
+<div id="view-story" class="hidden flex flex-col h-full justify-between overflow-hidden">
+<div id="story-lobby" class="flex flex-col h-full justify-between overflow-hidden">
+<div class="flex justify-between items-center border-b border-darkBorder pb-4">
+<div>
+<h3 class="text-xl font-fantasy text-f1f5f9 flex items-center gap-2">
+<i class="fa-solid fa-book-open text-indigo-400"></i> Chronicles of Choice
+</h3>
+<p class="text-xs text-remover mt-0.5">Mengarungi kisah bercabang. Pilihan dialogmu secara radikal mengubah akhir cerita!</p>
+</div>
+</div>
+<div id="story-lobby-list" class="flex-grow overflow-y-auto space-y-3.5 py-4 pr-1"></div>
+</div>
+<div id="story-viewport" class="hidden flex flex-col h-full justify-between overflow-hidden">
+<div class="flex justify-between items-center border-b border-darkBorder pb-2">
+<div>
+<span id="story-genre-badge" class="px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-rose-500/10 text-rose-400 border border-rose-500/20">HORROR</span>
+<h3 id="story-title" class="text-base font-fantasy text-f1f5f9 mt-0.5">The Whispering Manor</h3>
+</div>
+<button onclick="exitStoryToLobby()" class="text-xs text-remover hover:text-rose-400 transition flex items-center gap-1 bg-darkBg/50 px-2.5 py-1 rounded-lg border border-darkBorder">
+<i class="fa-solid fa-door-open"></i> Keluar
+</button>
+</div>
+<div class="relative w-full h-[260px] rounded-2xl overflow-hidden border border-darkBorder bg-gradient-to-br from-slate-900 via-slate-950 to-black flex items-center justify-center my-2 shadow-inner">
+    <div id="story-image-loader" class="absolute inset-0 bg-darkBg/90 flex flex-col items-center justify-center z-10">
+        <div class="text-3xl text-indigo-400 animate-spin mb-2"><i class="fa-solid fa-spinner animate-pulse"></i></div>
+        <p class="text-[10px] text-remover tracking-widest font-mono">DRAFTING SCENE PANEL...</p>
+    </div>
+    <img id="story-panel-image" class="absolute inset-0 w-full h-full object-contain hidden" alt="Scene Panel" />
+    <div id="story-panel-fallback" class="w-full h-full"></div>
+</div>
+<div class="bg-darkBg/60 border border-darkBorder rounded-2xl p-4 flex-grow flex flex-col justify-between overflow-hidden h-[190px]">
+<div class="overflow-y-auto pr-1 flex-grow mb-3 text-left">
+<p id="story-dialogue-text" class="text-xs text-slate-200 leading-relaxed font-medium"></p>
+</div>
+<div id="story-choices-container" class="space-y-1.5 shrink-0"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: LEADERBOARD -->
+<div class="xl:col-span-1 glass-card p-6 rounded-3xl h-[680px] flex flex-col overflow-hidden border-darkBorder">
+<div class="flex items-center gap-1 bg-darkBg/80 p-1 rounded-xl border border-darkBorder mb-4 text-xs">
+<button id="toggle-lbl-dungeon" onclick="toggleLeaderboard('dungeon')" class="flex-1 py-1.5 rounded-lg text-gold font-bold bg-gold/15 transition-all">⚔️ Dungeon</button>
+<button id="toggle-lbl-academy" onclick="toggleLeaderboard('academy')" class="flex-1 py-1.5 rounded-lg text-remover hover:text-f1f5f9 transition-all">📜 Academy</button>
+</div>
+<div class="overflow-y-auto flex-grow pr-1">
+<table class="w-full text-left text-sm">
+<thead>
+<tr class="text-remover border-b border-darkBorder sticky top-0 bg-darkCard z-10 text-xs">
+<th class="pb-3 pl-2">#</th>
+<th class="pb-3">Hero</th>
+<th id="leaderboard-header-col" class="pb-3 text-right pr-2">Max Score</th>
+</tr>
+</thead>
+<tbody id="leaderboard-body" class="divide-y divide-darkBorder/50"></tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- TEACHER SECTION -->
+<section id="teacher-section" class="hidden space-y-6">
+<div class="flex justify-between items-center pb-4 border-b border-darkBorder">
+<h2 class="text-2xl font-fantasy text-gold flex items-center gap-3"><i class="fa-solid fa-chalkboard-teacher"></i> Guru Console</h2>
+<button onclick="showView('student')" class="bg-darkCard px-5 py-2.5 rounded-xl text-sm border border-darkBorder hover:bg-remover/20"><i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Game</button>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- FORM -->
+<div class="lg:col-span-2 glass-card p-7 rounded-3xl space-y-4">
+<h3 class="font-fantasy border-b border-darkBorder pb-3 text-indigo-300">Editor Database Soal Tambahan</h3>
+<p class="text-xs text-remover">Tambahkan kuis kurikulum pilihan ganda yang nantinya bisa diakses oleh siswa di mode **Academy Quests**.</p>
+<div class="grid grid-cols-2 gap-4">
+<input type="text" id="q-title" placeholder="Judul Quest" class="w-full bg-darkBg border border-darkBorder p-3 rounded-xl focus:ring-1 focus:ring-indigo-400 outline-none text-f1f5f9">
+<select id="q-diff" class="bg-darkBg border border-darkBorder p-3 rounded-xl focus:ring-1 focus:ring-indigo-400 outline-none text-f1f5f9">
+<option value="Easy">Easy (10-20 XP)</option>
+<option value="Medium">Medium (20-50 XP)</option>
+<option value="Hard">Hard (50-250 XP)</option>
+<option value="Insane">Insane (250-2000 XP)</option>
+</select>
+</div>
+<textarea id="q-desc" placeholder="Deskripsi/Instruksi Singkat Quest" class="w-full bg-darkBg border border-darkBorder p-3 rounded-xl focus:ring-1 focus:ring-indigo-400 outline-none text-f1f5f9" rows="2"></textarea>
+<div class="border border-dashed border-darkBorder rounded-2xl p-5 space-y-3 bg-darkBg/50">
+<div class="flex justify-between items-center">
+<h4 class="font-semibold text-sm text-remover">Editor Soal</h4>
+<button onclick="addQuestionToForm()" class="text-xs bg-emerald-600 px-3 py-1 rounded-lg hover:bg-emerald-500"><i class="fa-solid fa-plus mr-1"></i> Tambah Soal ke Quest</button>
+</div>
+<input type="text" id="temp-q-text" placeholder="Pertanyaan (Contoh: He ... to school yesterday)" class="w-full bg-darkBg border border-darkBorder p-2.5 rounded-lg text-sm italic text-f1f5f9">
+<div class="grid grid-cols-3 gap-2 text-sm">
+<input type="text" id="temp-q-opt1" placeholder="Pilihan 1 (BENAR)" class="bg-emerald-950 border border-emerald-700 p-2.5 rounded-lg text-emerald-300">
+<input type="text" id="temp-q-opt2" placeholder="Pilihan 2" class="bg-darkBg border border-darkBorder p-2.5 rounded-lg text-f1f5f9">
+<input type="text" id="temp-q-opt3" placeholder="Pilihan 3" class="bg-darkBg border border-darkBorder p-2.5 rounded-lg text-f1f5f9">
+</div>
+<div id="form-questions-preview" class="text-xs text-remover space-y-1 pt-2 mono"></div>
+</div>
+<div class="flex justify-between items-center pt-3 border-t border-darkBorder">
+<input type="number" id="q-xp" placeholder="Total XP Reward" class="w-1/3 bg-darkBg border border-darkBorder p-3 rounded-xl focus:ring-1 focus:ring-indigo-400 outline-none text-f1f5f9">
+<button onclick="saveFinalQuest()" class="w-1/2 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+<i class="fa-solid fa-cloud-upload-alt"></i> Publikasikan Quest
+</button>
+</div>
+</div>
+<!-- LIST -->
+<div class="lg:col-span-1 glass-card p-6 rounded-3xl flex flex-col h-[550px]">
+<h3 class="font-bold border-b border-darkBorder pb-3 text-remover mb-3">Daftar Quest Terbit (Cloud)</h3>
+<div id="teacher-quest-list" class="space-y-2 overflow-y-auto flex-grow pr-1 text-sm"></div>
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- STORY EDITOR SECTION (TEACHER ONLY) -->
+<!-- ============================================ -->
+<div class="glass-card p-7 rounded-3xl space-y-4 mt-6 border-indigo-500/20">
+    <h3 class="font-fantasy border-b border-darkBorder pb-3 text-indigo-300 flex justify-between items-center">
+        <span>📖 Chronicles Story Editor</span>
+        <button id="btn-toggle-story-editor" class="text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg transition">
+            <i class="fa-solid fa-plus mr-1"></i> Buat Story Baru
+        </button>
+    </h3>
+    
+    <!-- Story Editor Form -->
+    <div id="story-editor-form" class="hidden space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+            <input type="text" id="story-title-input" placeholder="Judul Story" class="w-full bg-darkBg border border-darkBorder p-3 rounded-xl focus:ring-1 focus:ring-indigo-400 outline-none text-f1f5f9">
+            <select id="story-genre-input" class="bg-darkBg border border-darkBorder p-3 rounded-xl focus:ring-1 focus:ring-indigo-400 outline-none text-f1f5f9">
+                <option value="horror">Horror</option>
+                <option value="adventure">Adventure</option>
+                <option value="mystery">Mystery</option>
+            </select>
+        </div>
+        <input type="number" id="story-xp-input" placeholder="Reward XP (contoh: 100)" class="w-full bg-darkBg border border-darkBorder p-3 rounded-xl focus:ring-1 focus:ring-indigo-400 outline-none text-f1f5f9">
+        
+        <!-- Node Editor -->
+        <div class="border border-dashed border-indigo-500/30 rounded-2xl p-5 space-y-3 bg-darkBg/30">
+            <div class="flex justify-between items-center">
+                <h4 class="font-semibold text-sm text-indigo-300">Node/Scene Editor</h4>
+                <button id="btn-add-story-node" class="text-xs bg-emerald-600 px-3 py-1 rounded-lg hover:bg-emerald-500">
+                    <i class="fa-solid fa-plus mr-1"></i> Tambah Node
+                </button>
+            </div>
+            <div id="story-nodes-container" class="space-y-3"></div>
+        </div>
+        
+        <div class="flex justify-end gap-3 pt-3 border-t border-darkBorder">
+            <button id="btn-cancel-story" class="px-6 py-2.5 rounded-xl font-bold border border-darkBorder hover:bg-remover/20 transition">Batal</button>
+            <button id="btn-save-story" class="bg-indigo-600 hover:bg-indigo-500 px-8 py-2.5 rounded-xl font-bold transition flex items-center gap-2">
+                <i class="fa-solid fa-save"></i> Simpan Story
+            </button>
+        </div>
+    </div>
+    
+    <!-- List Custom Stories -->
+    <div class="mt-4">
+        <h4 class="font-semibold text-sm text-remover mb-3">Daftar Custom Stories</h4>
+        <div id="teacher-story-list" class="space-y-2"></div>
+    </div>
+</div>
+</section>
+</main>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+// =======================================================
+// --- 1. FIREBASE CONFIGURATION ---
+// =======================================================
+const firebaseConfig = typeof __firebase_config !== 'undefined'
+? JSON.parse(__firebase_config)
+: { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
+let isLocalMode = false;
+let authService = null;
+let db = null;
+let currentUser = null;
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "") {
+isLocalMode = true;
+console.log("Firebase config not found. Falling back to local offline mode.");
+}
+if (!isLocalMode) {
+try {
+const app = initializeApp(firebaseConfig);
+authService = getAuth(app);
+db = getFirestore(app);
+} catch (e) {
+console.error("Firebase init failed: ", e);
+isLocalMode = true;
+}
+}
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-english-quest-roguelike';
+const usersCollectionRef = !isLocalMode ? collection(db, 'artifacts', appId, 'public', 'data', 'users') : null;
+const questsCollectionRef = !isLocalMode ? collection(db, 'artifacts', appId, 'public', 'data', 'quests') : null;
+
+// =======================================================
+// --- 2. GLOBAL GAME VARIABLES ---
+// =======================================================
+let globalUsers = [];
+let globalQuests = [];
+let currentUserData = null;
+let leaderboardMode = "dungeon";
+let runActive = false;
+let isTurnProcessing = false;
+let activeGamemode = "hub";
+let runState = {
+stage: 1, score: 0, hp: 100, gold: 0,
+weapon: null, inventory: [], usedWords: [], recentSentences: [],
+currentEncounter: null, currentMonster: null, currentTenseBoost: null
+};
+let currentQuizData = null;
+let currentQuestionIndex = 0;
+let quizAnswers = [];
+let tempQuestionsForForm = [];
+const rareVocabPool = [
+{ word: "serendipity", type: "Noun", def: "Keberuntungan tak terduga saat menemukan hal baik tanpa sengaja.", mul: 1.5 },
+{ word: "ethereal", type: "Adjective", def: "Sangat indah, halus, atau magis bagaikan langit surga.", mul: 1.6 },
+{ word: "nefarious", type: "Adjective", def: "Sangat jahat, keji, kotor, atau tidak bermoral.", mul: 1.7 },
+{ word: "gargantuan", type: "Adjective", def: "Sangat besar, kolosal, atau berukuran luar biasa raksasa.", mul: 1.5 },
+{ word: "obfuscate", type: "Verb", def: "Sengaja membuat sesuatu menjadi samar, rumit, atau sulit dimengerti.", mul: 1.8 },
+{ word: "vanguard", type: "Noun", def: "Kelompok pelopor, garda terdepan, atau pemimpin inovasi.", mul: 1.6 },
+{ word: "pristine", type: "Adjective", def: "Murni, sangat bersih, utuh, dan belum tersentuh kerusakan.", mul: 1.5 },
+{ word: "quixotic", type: "Adjective", def: "Sangat idealis tapi tidak realistis, tidak praktis, atau mustahil.", mul: 1.8 },
+{ word: "ephemeral", type: "Adjective", def: "Berlangsung sangat singkat, berumur pendek, atau fana.", mul: 1.7 },
+{ word: "loquacious", type: "Adjective", def: "Sangat suka berbicara, cerewet, ramah, atau pandai mengobrol.", mul: 1.6 }
+];
+const gameItems = {
+RustyDagger: { id: "RustyDagger", name: "Rusty Dagger", type: "weapon", atk: 10, icon: "🗡️", cost: 0, desc: "Pisau karatan biasa." },
+WoodenStaff: { id: "WoodenStaff", name: "Wooden Staff", type: "weapon", atk: 8, icon: "🪵", cost: 0, desc: "Tongkat kayu penyihir pemula." },
+IronMace: { id: "IronMace", name: "Iron Mace", type: "weapon", atk: 14, icon: "🔨", cost: 12, desc: "Gada besi tumpul." },
+BronzeSword: { id: "BronzeSword", name: "Bronze Sword", type: "weapon", atk: 16, icon: "⚔️", cost: 16, desc: "Pedang perunggu berkarat." },
+ElvenBow: { id: "ElvenBow", name: "Elven Bow", type: "weapon", atk: 18, icon: "🏹", cost: 22, desc: "Busur kayu fleksibel bangsa Elf." },
+SilverRapier: { id: "SilverRapier", name: "Silver Rapier", type: "weapon", atk: 21, icon: "🤺", cost: 28, desc: "Pedang perak tipis berpresisi tinggi." },
+Broadsword: { id: "Broadsword", name: "Broadsword", type: "weapon", atk: 25, icon: "⚔️", cost: 38, desc: "Pedang baja lebar yang sangat kuat." },
+GrammarSpellbook: { id: "GrammarSpellbook", name: "Grammar Spellbook", type: "weapon", atk: 15, icon: "📖", cost: 45, desc: "Buku mantra. Multiplier Tense Boost x1.5!" },
+ShadowKatar: { id: "ShadowKatar", name: "Shadow Katar", type: "weapon", atk: 28, icon: "🥷", cost: 50, desc: "Belati bayangan milik pembunuh." },
+PoseidonTrident: { id: "PoseidonTrident", name: "Poseidon Trident", type: "weapon", atk: 35, icon: "🔱", cost: 65, desc: "Trisula samudera penakluk naga air." },
+VampiricFang: { id: "VampiricFang", name: "Vampiric Fang", type: "weapon", atk: 26, icon: "🧛", cost: 48, desc: "Taring vampir pengisap daya hidup." },
+AeroCrossbow: { id: "AeroCrossbow", name: "Aero Crossbow", type: "weapon", atk: 24, icon: "🏹", cost: 40, desc: "Busur otomatis berkecepatan tinggi." },
+PrismaticScepter: { id: "PrismaticScepter", name: "Prismatic Scepter", type: "weapon", atk: 32, icon: "🔮", cost: 60, desc: "Tongkat kristal dengan sihir spektrum." },
+LichStaff: { id: "LichStaff", name: "Lich Staff", type: "weapon", atk: 33, icon: "💀", cost: 62, desc: "Tongkat terkutuk penyihir kegelapan." },
+ThunderKatana: { id: "ThunderKatana", name: "Thunder Katana", type: "weapon", atk: 36, icon: "⚡", cost: 70, desc: "Katana bermuatan listrik sambaran petir." },
+DragonSlayer: { id: "DragonSlayer", name: "Dragon Slayer", type: "weapon", atk: 45, icon: "🐉", cost: 95, desc: "Pedang raksasa pemotong sisik naga purba." },
+PhoenixFlail: { id: "PhoenixFlail", name: "Phoenix Flail", type: "weapon", atk: 38, icon: "🔥", cost: 75, desc: "Gada rantai membara dengan bulu phoenix." },
+CrystalHalberd: { id: "CrystalHalberd", name: "Crystal Halberd", type: "weapon", atk: 40, icon: "🔱", cost: 85, desc: "Tombak kapak berkilau yang tajam." },
+RunicClaymore: { id: "RunicClaymore", name: "Runic Claymore", type: "weapon", atk: 44, icon: "🗡️", cost: 90, desc: "Pedang besar berukiran huruf rune magis." },
+HolyAxe: { id: "HolyAxe", name: "Holy Axe", type: "weapon", atk: 41, icon: "🪓", cost: 82, desc: "Kapak suci berlapis cahaya emas." },
+AbyssWhip: { id: "AbyssWhip", name: "Abyss Whip", type: "weapon", atk: 27, icon: "⛓️", cost: 44, desc: "Cambuk berduri dari dasar jurang." },
+SunSpear: { id: "SunSpear", name: "Sun Spear", type: "weapon", atk: 42, icon: "🔱", cost: 88, desc: "Tombak bermuatan radiasi cahaya matahari." },
+CursedScimitar: { id: "CursedScimitar", name: "Cursed Scimitar", type: "weapon", atk: 29, icon: "⚔️", cost: 46, desc: "Pedang lengkung yang berbisik jahat." },
+SpectralDagger: { id: "SpectralDagger", name: "Spectral Dagger", type: "weapon", atk: 16, icon: "👻", cost: 20, desc: "Belati berwujud bayangan transparan." },
+TitanHammer: { id: "TitanHammer", name: "Titan Hammer", type: "weapon", atk: 52, icon: "🔨", cost: 120, desc: "Palu raksasa penghancur gunung." },
+Excalibur: { id: "Excalibur", name: "Excalibur", type: "weapon", atk: 50, icon: "👑", cost: 115, desc: "Pedang suci pelindung kerajaan utama." },
+AstraSword: { id: "AstraSword", name: "Astra Sword", type: "weapon", atk: 55, icon: "✨", cost: 130, desc: "Pedang kosmik penembus dimensi bintang." },
+VoidScrap: { id: "VoidScrap", name: "Void Scrap", type: "weapon", atk: 15, icon: "🪐", cost: 18, desc: "Rongsokan besi dari luar angkasa." },
+GoblinsDagger: { id: "GoblinsDagger", name: "Goblin's Dagger", type: "weapon", atk: 12, icon: "🗡️", cost: 14, desc: "Belati rampasan milik Goblin." },
+MjolnirJr: { id: "MjolnirJr", name: "Mjolnir Jr", type: "weapon", atk: 30, icon: "🔨", cost: 55, desc: "Palu petir mini." },
+WoodenBuckler: { id: "WoodenBuckler", name: "Wooden Buckler", type: "shield", block: 2, icon: "🛡️", cost: 10, desc: "Tameng kayu tipis." },
+LeatherChest: { id: "LeatherChest", name: "Leather Chest", type: "shield", block: 3, icon: "🧥", cost: 12, desc: "Pelindung dada dari kulit." },
+RustedShield: { id: "RustedShield", name: "Rusted Shield", type: "shield", block: 4, icon: "🛡️", cost: 15, desc: "Tameng besi karatan." },
+Chainmail: { id: "Chainmail", name: "Chainmail", type: "shield", block: 6, icon: "⛓️", cost: 22, desc: "Baju jaring rantaian pelindung sayatan." },
+KnightHelmet: { id: "KnightHelmet", name: "Knight Helmet", type: "shield", block: 5, icon: "🪖", cost: 18, desc: "Helm baja ksatria pelindung dahi." },
+SteelGauntlets: { id: "SteelGauntlets", name: "Steel Gauntlets", type: "shield", block: 3, icon: "🧤", cost: 11, desc: "Sarung tangan besi pelindung sabetan." },
+IronShield: { id: "IronShield", name: "Iron Shield", type: "shield", block: 8, icon: "🛡️", cost: 30, desc: "Tameng besi tempa standar ksatria." },
+PlateMail: { id: "PlateMail", name: "Plate Mail", type: "shield", block: 11, icon: "🛡️", cost: 42, desc: "Baju zirah plat baja kokoh penuh." },
+RunicCloak: { id: "RunicCloak", name: "Runic Cloak", type: "shield", block: 5, icon: "🧥", cost: 20, desc: "Jubah kain bertuliskan rune pelindung." },
+ElvenBrigandine: { id: "ElvenBrigandine", name: "Elven Brigandine", type: "shield", block: 8, icon: "🍃", cost: 32, desc: "Baju pelindung tipis namun tangguh." },
+ShadowCowl: { id: "ShadowCowl", name: "Shadow Cowl", type: "shield", block: 4, icon: "🧥", cost: 16, desc: "Tudung malam pengurang serangan balik." },
+TitanGreaves: { id: "TitanGreaves", name: "Titan Greaves", type: "shield", block: 7, icon: "🦿", cost: 26, desc: "Pelindung kaki besi raksasa penahan gempa." },
+MysticRobes: { id: "MysticRobes", name: "Mystic Robes", type: "shield", block: 4, icon: "👘", cost: 15, desc: "Jubah sutra magis penyerap daya." },
+FrozenChestplate: { id: "FrozenChestplate", name: "Frozen Chestplate", type: "shield", block: 10, icon: "❄️", cost: 38, desc: "Zirah dada berlapis es pelindung membeku." },
+PaladinCuirass: { id: "PaladinCuirass", name: "Paladin Cuirass", type: "shield", block: 12, icon: "🛡️", cost: 48, desc: "Zirah suci pelindung kuil kehormatan." },
+MirrorShield: { id: "MirrorShield", name: "Mirror Shield", type: "shield", block: 13, icon: "🪞", cost: 52, desc: "Tameng kaca pemantul separuh serangan fisik." },
+LavaShield: { id: "LavaShield", name: "Lava Shield", type: "shield", block: 14, icon: "🌋", cost: 56, desc: "Tameng batu magma tebal tahan panas." },
+WindTunic: { id: "WindTunic", name: "Wind Tunic", type: "shield", block: 5, icon: "💨", cost: 19, desc: "Tunik angin peminim beban berat ksatria." },
+SpikedPauldrons: { id: "SpikedPauldrons", name: "Spiked Pauldrons", type: "shield", block: 6, icon: "🛡️", cost: 24, desc: "Pelindung pundak dengan duri penangkis." },
+BoneArmor: { id: "BoneArmor", name: "Bone Armor", type: "shield", block: 7, icon: "🦴", cost: 25, desc: "Zirah rakitan dari tulang monster." },
+VoidBracers: { id: "VoidBracers", name: "Void Bracers", type: "shield", block: 5, icon: "🪐", cost: 18, desc: "Pelindung pergelangan berbahan debu kosmik." },
+DragonScale: { id: "DragonScale", name: "Dragon Scale", type: "shield", block: 16, icon: "🐉", cost: 75, desc: "Zirah sisik naga legendaris tahan segala tebasan." },
+RoyalCrown: { id: "RoyalCrown", name: "Royal Crown", type: "shield", block: 6, icon: "👑", cost: 30, desc: "Mahkota raja pelindung benturan pikiran." },
+ObsidianGreaves: { id: "ObsidianGreaves", name: "Obsidian Greaves", type: "shield", block: 9, icon: "🦿", cost: 36, desc: "Pelindung kaki batu obsidian hitam." },
+AegisShield: { id: "AegisShield", name: "Aegis Shield", type: "shield", block: 20, icon: "🛡️", cost: 100, desc: "Tameng pertahanan Dewa tak tertembus." },
+MinorElixir: { id: "MinorElixir", name: "Minor Elixir", type: "consumable", heal: 20, icon: "🧪", cost: 8, desc: "Ramuan kecil pemulih 20 HP seketika." },
+HealthPotion: { id: "HealthPotion", name: "Health Potion", type: "consumable", heal: 35, icon: "🧪", cost: 15, desc: "Ramuan merah penyembuh 35 HP." },
+RegenHerb: { id: "RegenHerb", name: "Regen Herb", type: "consumable", heal: 15, icon: "🌿", cost: 7, desc: "Daun herbal penutup luka 15 HP." },
+ManaBiscuit: { id: "ManaBiscuit", name: "Mana Biscuit", type: "consumable", heal: 25, icon: "🍪", cost: 11, desc: "Biskuit gandum pemulih 25 HP." },
+GreaterPotion: { id: "GreaterPotion", name: "Greater Potion", type: "consumable", heal: 60, icon: "🧪", cost: 25, desc: "Ramuan botol besar penyembuh 60 HP." },
+FairyDust: { id: "FairyDust", name: "Fairy Dust", type: "consumable", heal: 30, icon: "✨", cost: 14, desc: "Serbuk peri penenang pemulih 30 HP." },
+GoldenApple: { id: "GoldenApple", name: "Golden Apple", type: "consumable", heal: 50, icon: "🍎", cost: 22, desc: "Apel emas suci pemulih 50 HP." },
+PhoenixFeather: { id: "PhoenixFeather", name: "Phoenix Feather", type: "consumable", heal: 40, icon: "🪶", cost: 18, desc: "Bulu ajaib phoenix pemulih 40 HP." },
+ElixirOfLife: { id: "ElixirOfLife", name: "Elixir of Life", type: "consumable", heal: 80, icon: "🧪", cost: 35, desc: "Ramuan rahasia abadi pemulih 80 HP." },
+LavaRoot: { id: "LavaRoot", name: "Lava Root", type: "consumable", heal: 18, icon: "🪵", cost: 9, desc: "Akar lava hangat penutup luka 18 HP." },
+FrozenBerry: { id: "FrozenBerry", name: "Frozen Berry", type: "consumable", heal: 22, icon: "🫐", cost: 10, desc: "Beri es beku pemulih 22 HP." },
+TonicOfYouth: { id: "TonicOfYouth", name: "Tonic Of Youth", type: "consumable", heal: 45, icon: "🧪", cost: 20, desc: "Tonik penambah darah pemulih 45 HP." },
+SacredWater: { id: "SacredWater", name: "Sacred Water", type: "consumable", heal: 70, icon: "💧", cost: 30, desc: "Air suci murni kuil pemulih 70 HP." },
+DragonBlood: { id: "DragonBlood", name: "Dragon Blood", type: "consumable", heal: 90, icon: "🩸", cost: 40, desc: "Darah naga pemulih vitalitas 90 HP." },
+BlessedBread: { id: "BlessedBread", name: "Blessed Bread", type: "consumable", heal: 28, icon: "🍞", cost: 12, desc: "Roti berkah gandum pemulih 28 HP." },
+StarShard: { id: "StarShard", name: "Star Shard", type: "consumable", heal: 32, icon: "⭐", cost: 14, desc: "Pecahan gugur bintang pemulih 32 HP." },
+ShamanBrew: { id: "ShamanBrew", name: "Shaman Brew", type: "consumable", heal: 55, icon: "🧪", cost: 24, desc: "Racikan ramuan tabib pemulih 55 HP." },
+VitalityDrink: { id: "VitalityDrink", name: "Vitality Drink", type: "consumable", heal: 37, icon: "🥤", cost: 16, desc: "Susu kental peningkat stamina 37 HP." },
+RoyalJelly: { id: "RoyalJelly", name: "Royal Jelly", type: "consumable", heal: 42, icon: "🍯", cost: 18, desc: "Madu murni ratu lebah penyembuh 42 HP." },
+FullRestore: { id: "FullRestore", name: "Full Restore", type: "consumable", heal: 100, icon: "🧪", cost: 45, desc: "Ramuan pamungkas pemulih 100% total HP." },
+RingOfWisdom: { id: "RingOfWisdom", name: "Ring of Wisdom", type: "passive", goldBoost: 1.5, icon: "💍", cost: 35, desc: "Cincin kebijaksanaan: Perolehan koin +50%." },
+RubyAmulet: { id: "RubyAmulet", name: "Ruby Amulet", type: "passive", flatAtkBonus: 5, icon: "📿", cost: 25, desc: "Amulet permata ruby: Serangan dasar +5 ATK." },
+SapphirePendant: { id: "SapphirePendant", name: "Sapphire Pendant", type: "passive", maxHpBonus: 20, icon: "📿", cost: 25, desc: "Kalung liontin safir: Batas maks HP +20." },
+EmeraldBand: { id: "EmeraldBand", name: "Emerald Band", type: "passive", goldBoost: 1.2, icon: "💍", cost: 20, desc: "Cincin zamrud: Perolehan koin +20%." },
+DiamondTalisman: { id: "DiamondTalisman", name: "Diamond Talisman", type: "passive", tenseMultiplierBonus: 0.5, icon: "🪬", cost: 40, desc: "Talisman berlian: Multiplier Tense +0.5x." },
+WarriorInsignia: { id: "WarriorInsignia", name: "Warrior Insignia", type: "passive", flatAtkBonus: 8, icon: "🎖️", cost: 35, desc: "Lencana tanda jasa prajurit: Serangan dasar +8 ATK." },
+GiantBelt: { id: "GiantBelt", name: "Giant Belt", type: "passive", maxHpBonus: 30, icon: "🥋", cost: 35, desc: "Sabuk pinggang raksasa: Batas maks HP +30." },
+LuckyCoin: { id: "LuckyCoin", name: "Lucky Coin", type: "passive", goldBoost: 1.3, icon: "🪙", cost: 22, desc: "Koin hoki kuno: Perolehan koin +30%." },
+WizardRing: { id: "WizardRing", name: "Wizard Ring", type: "passive", tenseMultiplierBonus: 0.3, icon: "💍", cost: 26, desc: "Cincin magis penyihir: Multiplier Tense +0.3x." },
+AuraBead: { id: "AuraBead", name: "Aura Bead", type: "passive", flatAtkBonus: 4, icon: "🔮", cost: 18, desc: "Butir kristal aura: Serangan dasar +4 ATK." },
+HeartPendant: { id: "HeartPendant", name: "Heart Pendant", type: "passive", maxHpBonus: 15, icon: "📿", cost: 18, desc: "Kalung pelindung jantung: Batas maks HP +15." },
+ThiefGlove: { id: "ThiefGlove", name: "Thief Glove", type: "passive", goldBoost: 1.4, icon: "🧤", cost: 28, desc: "Sarung tangan bandit pencuri: Perolehan koin +40%." },
+ScrollOfTenses: { id: "ScrollOfTenses", name: "Scroll Of Tenses", type: "passive", tenseMultiplierBonus: 0.4, icon: "📜", cost: 30, desc: "Gulungan rahasia tenses: Multiplier Tense +0.4x." },
+DemonEye: { id: "DemonEye", name: "Demon Eye", type: "passive", flatAtkBonus: 10, icon: "👁️", cost: 45, desc: "Mata merah iblis pengintai: Serangan dasar +10 ATK." },
+DragonEgg: { id: "DragonEgg", name: "Dragon Egg", type: "passive", maxHpBonus: 50, icon: "🥚", cost: 55, desc: "Fosil telur naga: Batas maks HP +50." },
+GoldenCompass: { id: "GoldenCompass", name: "Golden Compass", type: "passive", goldBoost: 1.5, icon: "🧭", cost: 38, desc: "Kompas emas penunjuk arah: Perolehan koin +50%." },
+AncientTablet: { id: "AncientTablet", name: "Ancient Tablet", type: "passive", tenseMultiplierBonus: 0.6, icon: "🪨", cost: 48, desc: "Prasasti kuno terlarang: Multiplier Tense +0.6x." },
+BerserkerRing: { id: "BerserkerRing", name: "Berserker Ring", type: "passive", flatAtkBonus: 12, icon: "💍", cost: 50, desc: "Cincin mengamuk: Serangan dasar +12 ATK." },
+VanguardShieldRing: { id: "VanguardShieldRing", name: "Vanguard Shield Ring", type: "passive", flatAtkBonus: 3, maxHpBonus: 10, icon: "💍", cost: 24, desc: "Cincin benteng: Serangan +3, HP +10." },
+GreedCrown: { id: "GreedCrown", name: "Greed Crown", type: "passive", goldBoost: 1.8, icon: "👑", cost: 65, desc: "Mahkota ketamakan: Perolehan koin +80%." },
+ChronoHourglass: { id: "ChronoHourglass", name: "Chrono Hourglass", type: "passive", tenseMultiplierBonus: 0.8, icon: "⏳", cost: 60, desc: "Jam pasir waktu krono: Multiplier Tense +0.8x." },
+AsgardBangle: { id: "AsgardBangle", name: "Asgard Bangle", type: "passive", flatAtkBonus: 15, icon: "🔱", cost: 65, desc: "Gelang ksatria Asgard: Serangan dasar +15 ATK." },
+YggdrasilLeaf: { id: "YggdrasilLeaf", name: "Yggdrasil Leaf", type: "passive", maxHpBonus: 40, icon: "🍃", cost: 46, desc: "Daun emas pohon dunia Yggdrasil: Batas maks HP +40." },
+PhilosopherStone: { id: "PhilosopherStone", name: "Philosopher Stone", type: "passive", goldBoost: 1.6, tenseMultiplierBonus: 0.5, icon: "🪨", cost: 80, desc: "Batu filsuf legendaris: Koin +60%, Multiplier Tense +0.5x." },
+InfinityRune: { id: "InfinityRune", name: "Infinity Rune", type: "passive", flatAtkBonus: 20, maxHpBonus: 50, goldBoost: 2.0, tenseMultiplierBonus: 1.0, icon: "♾️", cost: 150, desc: "Rune infinity: Memberikan peningkat stat dewa ksatria secara mutlak." }
+};
+const tenses = [
+{ id: "present", name: "Simple Present", mul: 2, desc: "Gunakan kata kerja dasar/Verb-1 atau is/am/are/do/does." },
+{ id: "past", name: "Simple Past", mul: 2, desc: "Gunakan past verbs seperti went, saw, played, was, were, did, had." },
+{ id: "present_cont", name: "Present Continuous", mul: 2.5, desc: "Gunakan is/am/are + Verb-ing." },
+{ id: "past_cont", name: "Past Continuous", mul: 3, desc: "Gunakan was/were + Verb-ing." },
+{ id: "past_perfect", name: "Past Perfect", mul: 4, desc: "Gunakan had + Verb-3 (had been, had gone, had eaten)." }
+];
+const monsters = [
+{ name: "Grammar Goblin", icon: "👹", baseHp: 30, baseAtk: 8, exp: 10 },
+{ name: "Past Tense Troll", icon: "👺", baseHp: 45, baseAtk: 12, exp: 20 },
+{ name: "Vocabulary Vampire", icon: "🧛", baseHp: 60, baseAtk: 16, exp: 35 },
+{ name: "Split Infinitive Slime", icon: "🦠", baseHp: 25, baseAtk: 6, exp: 8 },
+{ name: "Punctuation Phantom", icon: "👻", baseHp: 35, baseAtk: 10, exp: 15 },
+{ name: "Syntax Serpent", icon: "🐍", baseHp: 75, baseAtk: 20, exp: 50 }
+];
+const storyVocabDatabase = [
+{ word: "conspicuous", type: "Adjective", trans: "Mencolok / Jelas Terlihat", def: "Very easy to notice, attract special attention, or highly visible." },
+{ word: "melancholy", type: "Noun", trans: "Kemurungan / Kesedihan Mendalam", def: "A deep, pensive, and long-lasting feeling of sadness without clear cause." },
+{ word: "looming", type: "Verb", trans: "Membayangi / Muncul Samar", def: "Appearing as a shadowy form, especially one that is large, threatening, or ominous." },
+{ word: "sinister", type: "Adjective", trans: "Seram / Jahat / Berbahaya", def: "Giving the impression that something harmful, evil, or dark is about to happen." },
+{ word: "dilapidated", type: "Adjective", trans: "Bobrok / Rusak Berat", def: "In a state of ruin or decay as a result of age, severe neglect, or abuse." },
+{ word: "apprehensive", type: "Adjective", trans: "Khawatir / Cemas / Was-was", def: "Anxious or fearful that something bad or unpleasant will happen." },
+{ word: "ghastly", type: "Adjective", trans: "Mengerikan / Pucat Bagaikan Mayat", def: "Causing great horror or fear; extremely unwell, ghostly, or unpleasant." },
+{ word: "archipelago", type: "Noun", trans: "Kepulauan", def: "A large cluster, chain, or group of closely scattered islands in an ocean or sky." },
+{ word: "aether", type: "Noun", trans: "Eter / Langit Kosmik", def: "The clear upper sky, or a hypothetical medium formerly believed to fill all space." },
+{ word: "venturous", type: "Adjective", trans: "Berani / Nekat mengambil risiko", def: "Willing to take risks or embark on daring, dangerous adventures." },
+{ word: "velocity", type: "Noun", trans: "Kecepatan", def: "The speed of something in a given direction; swiftness of motion." },
+{ word: "unfathomable", type: "Adjective", trans: "Tak Terduga / Sangat Dalam", def: "Incapable of being fully explored, measured, understood, or comprehended." },
+{ word: "gale", type: "Noun", trans: "Angin Kencang / Badai", def: "A very strong wind, typically measuring between 34 and 47 knots on the Beaufort scale." },
+{ word: "clandestine", type: "Adjective", trans: "Rahasia / Sembunyi-sembunyi", def: "Kept secret or done secretively, especially because of illicit or dangerous motives." },
+{ word: "conundrum", type: "Noun", trans: "Teka-teki Sulit / Dilema", def: "A confusing and difficult problem or question with no easy solution." },
+{ word: "chronometer", type: "Noun", trans: "Alat Pengukur Waktu Presisi", def: "An instrument for measuring time accurately, especially in marine navigation." },
+{ word: "conspirator", type: "Noun", trans: "Konspirator / Perancang Konspirasi", def: "A person who takes part in a secret plot or scheme to commit an unlawful act." },
+{ word: "impeccable", type: "Adjective", trans: "Tanpa Cela / Sempurna", def: "In accordance with the highest standards of propriety; faultless and flawless." },
+{ word: "scrutinize", type: "Verb", trans: "Meneliti Dengan Cermat", def: "To examine, inspect, or analyze someone or something closely and thoroughly." },
+{ word: "sabotage", type: "Verb/Noun", trans: "Sabotase / Perusakan Sengaja", def: "Deliberately destroy, damage, or obstruct something, especially for political or military advantage." },
+{ word: "deduction", type: "Noun", trans: "Deduksi / Penarikan Kesimpulan", def: "The action of deriving logical conclusions from known premises or evidence." }
+];
+const storyPlots = {
+horror: {
+title: "The Whispering Manor",
+genre: "HORROR",
+rewardXp: 0,
+nodes: {
+start: {
+imagePrompt: "An abandoned dilapidated Victorian mansion standing looming at night, creepy dry trees, glowing red eyes hidden in bushes, anime sketch style",
+text: "You stand in front of the Whispering Manor. A conspicuous chill crawls up your spine. The iron gate creaks. Shadows look sinister as the wind carries a melancholy whisper from within.",
+choices: [
+{ text: "Enter through the front door silently", target: "hall" },
+{ text: "Peer through the dusty kitchen window", target: "window" }
+]
+},
+hall: {
+imagePrompt: "Creepy dark hallway inside a mansion, old dilapidated portraits, dusty floor with footprints, faint ghostly silhouette, dramatic dark lighting, anime comic panel",
+text: "You step into the dusty main hall. Suddenly, the front door slams shut! You are apprehensive as a ghastly white silhouette slowly manifests at the top of the stairs, sobbing.",
+choices: [
+{ text: "Speak with gentleness and offer comfort", target: "ghost_help" },
+{ text: "Douse your lantern and hide under the wooden table", target: "hide" }
+]
+},
+window: {
+imagePrompt: "Peering through a dirty window into a creepy kitchen, a faint glowing key floating in mid-air, dark green mood, anime comic style",
+text: "Looking through the dirty glass, you notice a strange glowing key floating above the stone stove. It looks conspicuous. A shadowy figure seems to be patrolling behind it.",
+choices: [
+{ text: "Smash the window pane and grab the key", target: "window_trap" },
+{ text: "Retreat and slip through the front door", target: "hall" }
+]
+},
+ghost_help: {
+imagePrompt: "A young friendly ghost girl smiling faintly, surrounded by sparkling blue stardust, warm candle light, emotional anime scene",
+text: "You ask her softly why she weeps. The ghost looks surprised. She stops sobbing and says she lost her doll in the library. Your resilience and kindness have touched her spirit.",
+choices: [
+{ text: "Search the grand library for her lost doll", target: "ending_good" },
+{ text: "Deceive her and make a run for the exit door", target: "ending_bad" }
+]
+},
+hide: {
+imagePrompt: "Hiding under a dusty table, dark view looking out, scary shadow feet walking past, suspenseful anime comic style",
+text: "You hold your breath under the table. The freezing wind drafts right past you. You see a set of phantom feet walking slowly. In their wake, they leave a dusty old diary on the floor.",
+choices: [
+{ text: "Crawl out to read the mysterious diary", target: "read_diary" },
+{ text: "Flee towards the garden exit instantly", target: "ending_neutral" }
+]
+},
+window_trap: {
+imagePrompt: "Vines with sharp thorns grabbing a hand reaching through a window, eerie red lights, horror trap anime style",
+text: "As you break the glass, the sinister shadows turn around! Sharp, thorned vines erupt from the frame, binding your wrist. You fell into the Manor's conspicuous trap.",
+choices: [
+{ text: "Accept defeat", target: "ending_bad" }
+]
+},
+read_diary: {
+imagePrompt: "An open old leather book glowing with blue magic particles, revealing a map of the manor cellar, anime illustration",
+text: "The diary contains secrets about the mansion. It speaks of a clandestine cellar vault. Knowing this details, you feel less apprehensive about continuing.",
+choices: [
+{ text: "Use the cellar map to find the secret vault", target: "ending_secret" },
+{ text: "Take the diary and escape while you can", target: "ending_neutral" }
+]
+},
+ending_good: {
+imagePrompt: "A friendly ghost girl ascending into light, holding her doll, starry glowing sky, emotional closure anime panel",
+text: "You returned her doll. She smiles warmly as her ghastly form turns into brilliant stardust. The curse of the Whispering Manor has faded, and you stand triumphant!",
+choices: [],
+result: { status: "good", xp: 0, msg: "GOOD ENDING: The Restored Spirit! Anda berhasil menyelamatkan arwah penasaran." }
+},
+ending_secret: {
+imagePrompt: "An adventurer standing inside a ancient vault full of shining golden artifacts, starry blue sky visible above, anime epic shot",
+text: "Using the diary, you unlock the clandestine vault. Inside lies pristine treasure and lost knowledge! Your deductive adventure has turned you into a legendary explorer.",
+choices: [],
+result: { status: "secret", xp: 0, msg: "SECRET ENDING: Vault of Antiquity! Menemukan harta karun terdalam Manor." }
+},
+ending_neutral: {
+imagePrompt: "An adventurer escaping into a forest under a full moon, looking back at a dark mansion, cinematic anime mood",
+text: "You escape the Manor safely. However, the whispers follow you in your dreams. You are safe, but the secrets of the mansion remain unfathomable.",
+choices: [],
+result: { status: "neutral", xp: 0, msg: "NEUTRAL ENDING: Escape into the Night. Selamat namun dihantui." }
+},
+ending_bad: {
+imagePrompt: "A dark gothic dungeon room, cold bars, creepy shadow tentacles, bad ending screen anime format",
+text: "You made poor choices without careful reading. The sinister forces of the dilapidated mansion lock you away in the cold dungeon. Darkness consumes your vision.",
+choices: [],
+result: { status: "bad", xp: 0, msg: "BAD ENDING: Consumed by Whispers. Coba lagi dan baca petunjuk secara saksama!" }
+}
+}
+},
+adventure: {
+title: "The Skyward Archipelago",
+genre: "ADVENTURE",
+rewardXp: 0,
+nodes: {
+start: {
+imagePrompt: "A futuristic steampunk airship docked at a floating island harbor, vibrant sky filled with blue clouds, majestic scenery anime style",
+text: "You stand at the docks of the Skyward Archipelago. Your mission is to find the crystal of the Sky Gods. Suddenly, a wild gale of wind shakes the floating harbor.",
+choices: [
+{ text: "Launch the airship instantly with full velocity", target: "fast_launch" },
+{ text: "Inspect the engine systems carefully first", target: "inspect" }
+]
+},
+fast_launch: {
+imagePrompt: "An airship sailing through heavy lightning and dark purple clouds, high velocity, action dynamic anime panel",
+text: "Your ship shoots forward with high velocity. The aether crackles around you. But a massive storm lies directly ahead. The storm winds are unfathomable!",
+choices: [
+{ text: "Steer directly into the storm core bravely", target: "storm_fight" },
+{ text: "Deploy the clandestine glider wings and slide down", target: "glider" }
+]
+},
+inspect: {
+imagePrompt: "An engineer examining bronze gears and glowing blue pipes, technical details, anime workspace",
+text: "Your cautious inspection is impeccable. You discover a critical sabotage in the main chronometer of the engine. Fixing it ensures stable sailing.",
+choices: [
+{ text: "Take off with repaired optimal thrusters", target: "safe_launch" },
+{ text: "Trade the sabotage evidence with local sky-pirates", target: "pirate_deal" }
+]
+},
+storm_fight: {
+imagePrompt: "An airship successfully punching through clouds into a sunny skies with floating green islands, epic view, anime concept art",
+text: "With daring velocity, you conquer the storm! Before you lies the Temple of Sky Gods, soaring above the clouds. You have shown remarkable resilience.",
+choices: [
+{ text: "Land directly at the Temple gate", target: "ending_good" },
+{ text: "Look for a hidden clandestine runway", target: "ending_secret" }
+]
+},
+glider: {
+imagePrompt: "A lone adventurer gliding through clear sky with a mechanical glider, scenic blue world below, anime style",
+text: "Your glider carries you away from the storm, but you land safely on a smaller, venturous outpost. The main sky ship is lost, but you are alive.",
+choices: [
+{ text: "Register at the outpost to return home", target: "ending_neutral" }
+]
+},
+safe_launch: {
+imagePrompt: "Airship cruising peacefully beside a flock of majestic sky birds, sunrise orange sky, warm anime environment",
+text: "With a perfectly repaired engine, your ship glides smoothly through the gale. No storm can hinder your immaculate journey.",
+choices: [
+{ text: "Proceed to the Sky Temple safely", target: "ending_good" }
+]
+},
+pirate_deal: {
+imagePrompt: "A friendly pirate captain with a mechanical eye patch, laughing heartily, gold coins on table, steampunk anime",
+text: "The pirates appreciate your clandestine information! They reward you with a legendary grappling hook and offer to sail alongside you as escorts.",
+choices: [
+{ text: "Lead the pirate fleet to attack the Sky Temple guard", target: "ending_secret" },
+{ text: "Take their gold reward and return back", target: "ending_neutral" }
+]
+},
+ending_good: {
+imagePrompt: "Hero holding a giant glowing blue levitating crystal inside a marble temple, epic anime triumph scene",
+text: "You successfully secure the Crystal of Sky Gods! Its magic heals your home island, making it secure and fertile. You are the Savior of Skies!",
+choices: [],
+result: { status: "good", xp: 0, msg: "GOOD ENDING: Savior of Skies! Anda mengamankan energi murni Archipelago." }
+},
+ending_secret: {
+imagePrompt: "Adventurer crowned with crystal leaves, leading a sky pirate fleet, majestic sunset sky, legendary anime epic ending",
+text: "Not only did you save your home, but you also unified the Sky-Pirates! Together, you establish a peaceful Sky Empire. You are crowned as the Sovereign of Aether!",
+choices: [],
+result: { status: "secret", xp: 0, msg: "SECRET ENDING: Sovereign of the Skies! Menyatukan bajak laut dan menguasai langit." }
+},
+ending_neutral: {
+imagePrompt: "Sailing a small sky-boat back home with minor treasures, calm night sky, peaceful anime ending",
+text: "You returned home safely with sufficient treasure. Although you didn't secure the divine Crystal, your family is safe and prosperous.",
+choices: [],
+result: { status: "neutral", xp: 0, msg: "NEUTRAL ENDING: Honest Sailor. Selamat dengan membawa perbekalan yang cukup." }
+}
+}
+},
+mystery: {
+title: "The Silent Clocktower",
+genre: "MYSTERY",
+rewardXp: 0,
+nodes: {
+start: {
+imagePrompt: "A giant clock tower in a Victorian steampunk city, gears stopped, dark foggy night, cobblestone street, anime illustration",
+text: "Time has stopped in the mechanical town of Oakhaven. Detective Alistair stands inside the central clock chamber. You must solve this deep conundrum and find the saboteur.",
+choices: [
+{ text: "Scrutinize the clockmaker's tool bench", target: "bench" },
+{ text: "Interrogate the eccentric Mayor at once", target: "mayor" }
+]
+},
+bench: {
+imagePrompt: "Close-up of a wooden bench with vials of magnetic green oil, blueprints, magnifying glass, detective anime style",
+text: "You scrutinize the workspace. Among pristine tools, you find a suspicious chronometer showing 11:11, and a trace of rare magnetic oil. This indicates systematic sabotage.",
+choices: [
+{ text: "Analyze the molecular structure of the magnetic oil", target: "analyze_oil" },
+{ text: "Accuse the nervous apprentice immediately", target: "apprentice_confront" }
+]
+},
+mayor: {
+imagePrompt: "A wealthy Mayor in Victorian suit sweating nervously, ticking golden pocket watch in hand, dramatic lighting anime",
+text: "The Mayor acts perplexed. However, you notice his impeccable pocket watch is still ticking! Everyone else's chronometer is completely frozen.",
+choices: [
+{ text: "Demand an explanation for his ticking pocket watch", target: "accuse_mayor" },
+{ text: "Follow him secretly into the dark town archives", target: "follow_mayor" }
+]
+},
+analyze_oil: {
+imagePrompt: "An adventurer looking at blueprints under a magical blue light revealing hidden glowing text, detective deduction anime",
+text: "Your deduction is stellar! The magnetic oil matches the Oakhaven Mines. You discover a secret plan signed by a mysterious conspirator named 'X'.",
+choices: [
+{ text: "Confront 'X' at the clocktower gears", target: "ending_good" },
+{ text: "Use the blueprints to locate the clandestine hideout", target: "ending_secret" }
+]
+},
+apprentice_confront: {
+imagePrompt: "A young apprentice looking scared, pointing at a mechanical trapdoor opening, action suspense anime",
+text: "The apprentice panics and pulls a lever! The master gears spin wildly in reverse. You fall through a collapsing floor trap. Your approach was not meticulous enough.",
+choices: [
+{ text: "Try to grab the ledge", target: "ending_bad" }
+]
+},
+accuse_mayor: {
+imagePrompt: "Mayor confessing with hands in cuffs, gears background, detective anime resolution",
+text: "Cornered, the Mayor confesses! He was forced by the Guild of Time to halt the clocktower chronometer using magnetic sabotage. He gives you the master release key.",
+choices: [
+{ text: "Unlock and restart Oakhaven's master gears", target: "ending_good" }
+]
+},
+follow_mayor: {
+imagePrompt: "Stealth shadow of a detective tailing a man under golden gaslight lanterns, noir steampunk anime style",
+text: "Tailing the Mayor, you discover him meeting a shadowy figure in the archives. They talk about a clandestine plan to control the town's mechanical gears forever.",
+choices: [
+{ text: "Spring from the shadows and arrest them both", target: "ending_secret" },
+{ text: "Run back to notify the town guards", target: "ending_neutral" }
+]
+},
+ending_good: {
+imagePrompt: "Giant clocktower illuminated with warm golden light, gears rotating smoothly, anime steampunk resolution",
+text: "The clocktower gears start rotating again! Golden clock hands resume ticking. You solved the conundrum and restored peace to Oakhaven.",
+choices: [],
+result: { status: "good", xp: 0, msg: "GOOD ENDING: Chrono Restoration! Waktu kota kembali berputar normal." }
+},
+ending_secret: {
+imagePrompt: "Detective holding a glowing gold master device, surrounded by arrested corrupt leaders, high success anime shot",
+text: "Amazing! You arrested the conspirators and secured the Divine Chronometer. The town crowns you as the Supreme Guardian of Time!",
+choices: [],
+result: { status: "secret", xp: 0, msg: "SECRET ENDING: Supreme Guardian! Membongkar konspirasi besar penguasa waktu." }
+},
+ending_neutral: {
+imagePrompt: "Detective sitting at an office desk under soft amber lamplight, drinking coffee, looking at files, calm anime style",
+text: "The conspirators escaped, but the time gears were successfully restarted. The conundrum is resolved, though some shadow mysteries remain.",
+choices: [],
+result: { status: "neutral", xp: 0, msg: "NEUTRAL ENDING: Case Unsolved. Kota aman namun misteri bayangan belum tuntas." }
+},
+ending_bad: {
+imagePrompt: "A dark gear chamber locked forever, ticking clock shadows on the wall, bad ending theme anime",
+text: "You rushed without analyzing. Time remains permanently stopped, and you are locked inside the cold, gear-filled labyrinth forever.",
+choices: [],
+result: { status: "bad", xp: 0, msg: "BAD ENDING: Frozen in Time. Kurangi ketergesaan Anda dan bacalah petunjuk secara teliti!" }
+}
+}
+}
+};
+
+let currentStoryId = null;
+let currentStoryNode = "start";
+let unlockedChroniclesVocab = [];
+
+// =======================================================
+// --- CUSTOM STORY MANAGEMENT FOR TEACHER ---
+// =======================================================
+let tempStoryNodes = [];
+let editingStoryId = null;
+
+function getCustomStories() {
+if (isLocalMode) {
+return JSON.parse(localStorage.getItem('eq_custom_stories') || '[]');
+}
+return [];
+}
+
+function toggleStoryEditor() {
+const form = document.getElementById('story-editor-form');
+if (!form) return;
+form.classList.toggle('hidden');
+if (!form.classList.contains('hidden')) {
+initStoryEditor();
+}
+}
+
+function cancelStoryEdit() {
+    const form = document.getElementById('story-editor-form');
+    if (form) form.classList.add('hidden');
+    initStoryEditor();
+}
+
+function initStoryEditor() {
+    editingStoryId = null;
+    const titleInput = document.getElementById('story-title-input');
+    const genreInput = document.getElementById('story-genre-input');
+    const xpInput = document.getElementById('story-xp-input');
+    if (titleInput) titleInput.value = '';
+    if (genreInput) genreInput.value = 'horror';
+    if (xpInput) xpInput.value = '100';
+    
+    // Mulai dengan 1 node 'start' otomatis
+    tempStoryNodes = [{
+        id: 'start',
+        imagePrompt: '',
+        imageUrl: '',
+        text: '',
+        choices: []
+    }];
+    renderStoryNodesEditor();
+}
+
+
+function addStoryNode() {
+    const timestamp = Date.now();
+    const index = tempStoryNodes.length;
+    const nodeId = `node_${timestamp}_${index}`;
+    
+    tempStoryNodes.push({
+        id: nodeId,
+        imagePrompt: '',
+        imageUrl: '',
+        text: '',
+        choices: []
+    });
+    renderStoryNodesEditor();
+}
+function renderStoryNodesEditor() {
+    const container = document.getElementById('story-nodes-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // Daftar semua Node ID untuk dropdown target
+    const allNodeIds = tempStoryNodes.map(n => n.id);
+
+    tempStoryNodes.forEach((node, index) => {
+        const isFirst = index === 0;
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = 'bg-darkBg/60 border border-darkBorder rounded-xl p-4 space-y-3';
+
+        // Build choices HTML dengan dropdown target
+        let choicesHtml = '';
+        node.choices.forEach((choice, cidx) => {
+            const optionsHtml = allNodeIds.map(id => 
+                `<option value="${id}" ${choice.target === id ? 'selected' : ''}>${id}</option>`
+            ).join('');
+            
+            choicesHtml += `
+                <div class="flex gap-2 items-center bg-darkBg/40 p-2 rounded-lg border border-darkBorder" data-choice-idx="${cidx}">
+                    <input type="text" placeholder="Teks pilihan..." class="choice-text-input flex-1 bg-darkBg border border-darkBorder p-1.5 rounded text-xs text-f1f5f9" value="${(choice.text || '').replace(/"/g, '&quot;')}">
+                    <select class="choice-target-select w-48 bg-darkBg border border-indigo-500/40 p-1.5 rounded text-xs text-indigo-300 font-mono">
+                        <option value="" disabled>Pilih target node...</option>
+                        ${optionsHtml}
+                    </select>
+                    <button class="remove-choice-btn text-rose-400 hover:text-rose-300 text-xs px-2" data-node-id="${node.id}" data-choice-idx="${cidx}" title="Hapus pilihan">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+            `;
+        });
+
+        nodeDiv.innerHTML = `
+            <div class="flex justify-between items-center pb-2 border-b border-darkBorder/50">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-indigo-400">Node ${index + 1}</span>
+                    ${isFirst ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">START</span>' : ''}
+                </div>
+                ${!isFirst ? `<button class="remove-node-btn text-rose-400 hover:text-rose-300 text-xs" data-node-id="${node.id}" title="Hapus node"><i class="fa-solid fa-trash mr-1"></i>Hapus</button>` : ''}
+            </div>
+            
+            <!-- Node ID Display dengan Tombol Copy -->
+            <div class="flex items-center gap-2 bg-indigo-950/30 p-2 rounded-lg border border-indigo-500/20">
+                <label class="text-[10px] text-remover font-bold uppercase">Node ID:</label>
+                <code class="flex-1 text-xs text-indigo-300 font-mono font-bold break-all">${node.id}</code>
+                <button class="copy-node-id-btn text-[10px] bg-indigo-600 hover:bg-indigo-500 px-2 py-1 rounded text-white" data-node-id="${node.id}" title="Copy ID ke clipboard">
+                    <i class="fa-solid fa-copy"></i>
+                </button>
+            </div>
+            
+            <!-- Dialog Text -->
+            <div>
+                <label class="text-[10px] text-remover font-bold uppercase block mb-1">Dialog/Narasi:</label>
+                <textarea placeholder="Tulis narasi atau dialog scene ini..." class="node-text-input w-full bg-darkBg border border-darkBorder p-2 rounded-lg text-sm text-f1f5f9" rows="3">${node.text || ''}</textarea>
+            </div>
+            
+            <!-- Image Section -->
+            <div>
+                <label class="text-[10px] text-remover font-bold uppercase block mb-1">Gambar Scene:</label>
+                <input type="text" placeholder="Image Prompt (untuk AI generate) atau URL gambar..." class="node-prompt-input w-full bg-darkBg border border-darkBorder p-2 rounded-lg text-sm text-f1f5f9 mb-2" value="${(node.imagePrompt || '').replace(/"/g, '&quot;')}">
+                <div class="flex gap-2 items-center">
+                    <input type="file" accept="image/*" class="node-image-input text-xs text-remover flex-1" data-node-id="${node.id}">
+                    ${node.imageUrl ? '<span class="text-xs text-emerald-400 flex items-center"><i class="fa-solid fa-check mr-1"></i> Gambar terupload</span>' : ''}
+                </div>
+            </div>
+            
+            <!-- Choices Section -->
+            <div class="border-t border-darkBorder pt-3">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs text-remover font-bold">🔀 Pilihan Cabang (${node.choices.length})</span>
+                    <button class="add-choice-btn text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded" data-node-id="${node.id}">
+                        <i class="fa-solid fa-plus mr-1"></i> Tambah Pilihan
+                    </button>
+                </div>
+                ${node.choices.length === 0 ? '<p class="text-[10px] text-remover italic bg-darkBg/40 p-2 rounded border border-dashed border-darkBorder">💡 Scene tanpa pilihan = ENDING (otomatis jadi akhir cerita)</p>' : ''}
+                <div class="choices-container space-y-2">${choicesHtml}</div>
+            </div>
+        `;
+        container.appendChild(nodeDiv);
+    });
+
+    attachNodeEventListeners();
+}
+
+function attachNodeEventListeners() {
+    const syncAll = () => syncNodeInputsToState();
+
+    // Remove node buttons
+    document.querySelectorAll('.remove-node-btn').forEach(btn => {
+        btn.onclick = () => {
+            syncAll();
+            const nodeId = btn.getAttribute('data-node-id');
+            
+            // Cek apakah node ini jadi target choice lain
+            const isTarget = tempStoryNodes.some(n => 
+                n.choices.some(c => c.target === nodeId)
+            );
+            if (isTarget) {
+                showMessageModal(`⚠️ Node "${nodeId}" masih dijadikan target oleh pilihan di scene lain. Ubah target pilihan tersebut terlebih dahulu.`);
+                return;
+            }
+            
+            tempStoryNodes = tempStoryNodes.filter(n => n.id !== nodeId);
+            renderStoryNodesEditor();
+        };
+    });
+
+    // Add choice buttons
+    document.querySelectorAll('.add-choice-btn').forEach(btn => {
+        btn.onclick = () => {
+            syncAll();
+            const nodeId = btn.getAttribute('data-node-id');
+            const node = tempStoryNodes.find(n => n.id === nodeId);
+            if (node) {
+                node.choices.push({ text: '', target: '' });
+                renderStoryNodesEditor();
+            }
+        };
+    });
+
+    // Remove choice buttons
+    document.querySelectorAll('.remove-choice-btn').forEach(btn => {
+        btn.onclick = () => {
+            syncAll();
+            const nodeId = btn.getAttribute('data-node-id');
+            const cidx = parseInt(btn.getAttribute('data-choice-idx'));
+            const node = tempStoryNodes.find(n => n.id === nodeId);
+            if (node) {
+                node.choices.splice(cidx, 1);
+                renderStoryNodesEditor();
+            }
+        };
+    });
+
+    // Image upload handlers
+    document.querySelectorAll('.node-image-input').forEach(input => {
+        input.onchange = (e) => {
+            const nodeId = input.getAttribute('data-node-id');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const node = tempStoryNodes.find(n => n.id === nodeId);
+                    if (node) {
+                        node.imageUrl = ev.target.result;
+                        renderStoryNodesEditor();
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+    });
+
+    // Copy Node ID buttons
+    document.querySelectorAll('.copy-node-id-btn').forEach(btn => {
+        btn.onclick = () => {
+            const nodeId = btn.getAttribute('data-node-id');
+            navigator.clipboard.writeText(nodeId).then(() => {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                btn.classList.remove('bg-indigo-600');
+                btn.classList.add('bg-emerald-600');
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-emerald-600');
+                    btn.classList.add('bg-indigo-600');
+                }, 1500);
+            }).catch(() => {
+                showMessageModal("Gagal copy. Browser tidak mendukung clipboard API.");
+            });
+        };
+    });
+
+    // Choice text & target select handlers
+    document.querySelectorAll('.choice-text-input').forEach(input => {
+        input.oninput = () => syncAll();
+    });
+    document.querySelectorAll('.choice-target-select').forEach(select => {
+        select.onchange = () => syncAll();
+    });
+    document.querySelectorAll('.node-text-input').forEach(ta => {
+        ta.oninput = () => syncAll();
+    });
+    document.querySelectorAll('.node-prompt-input').forEach(input => {
+        input.oninput = () => syncAll();
+    });
+}
+
+function syncNodeInputsToState() {
+    const container = document.getElementById('story-nodes-container');
+    if (!container) return;
+    const nodeDivs = container.children;
+    
+    for (let i = 0; i < nodeDivs.length; i++) {
+        const div = nodeDivs[i];
+        const node = tempStoryNodes[i];
+        if (!node) continue;
+
+        const textInput = div.querySelector('.node-text-input');
+        const promptInput = div.querySelector('.node-prompt-input');
+        if (textInput) node.text = textInput.value;
+        if (promptInput) node.imagePrompt = promptInput.value;
+
+        const choiceDivs = div.querySelectorAll('.choices-container > div');
+        node.choices.forEach((choice, cidx) => {
+            const choiceDiv = choiceDivs[cidx];
+            if (!choiceDiv) return;
+            const textEl = choiceDiv.querySelector('.choice-text-input');
+            const targetEl = choiceDiv.querySelector('.choice-target-select');
+            if (textEl) choice.text = textEl.value;
+            if (targetEl) choice.target = targetEl.value;
+        });
+    }
+}
+
+function saveCustomStory() {
+    syncNodeInputsToState();
+
+    const title = document.getElementById('story-title-input').value.trim();
+    const genre = document.getElementById('story-genre-input').value.toUpperCase();
+    const xp = parseInt(document.getElementById('story-xp-input').value) || 100;
+
+    if (!title) return showMessageModal("Judul story harus diisi!");
+    if (tempStoryNodes.length === 0) return showMessageModal("Minimal harus ada 1 node (scene)!");
+
+    // Validasi: cek apakah ada node start
+    const startNode = tempStoryNodes.find(n => n.id === 'start');
+    if (!startNode) return showMessageModal("Harus ada node dengan ID 'start' sebagai awal cerita!");
+
+    // Validasi: cek semua target choice mengarah ke node yang valid
+    const nodeIds = new Set(tempStoryNodes.map(n => n.id));
+    for (const node of tempStoryNodes) {
+        for (const choice of node.choices) {
+            if (choice.text && choice.text.trim() && !nodeIds.has(choice.target)) {
+                return showMessageModal(`⚠️ Scene "${node.id}" memiliki pilihan yang mengarah ke node "${choice.target}" yang tidak ada!`);
+            }
+        }
+    }
+
+    // Build nodes object
+    const nodes = {};
+    tempStoryNodes.forEach((node) => {
+        const choices = node.choices
+            .filter(c => c.text && c.text.trim() !== '' && c.target)
+            .map(c => ({ text: c.text.trim(), target: c.target.trim() }));
+
+        nodes[node.id] = {
+            imagePrompt: node.imagePrompt || '',
+            imageUrl: node.imageUrl || '',
+            text: node.text || '',
+            choices: choices
+        };
+
+        if (choices.length === 0) {
+            nodes[node.id].result = {
+                status: 'good',
+                xp: xp,
+                msg: `STORY COMPLETED: ${title}! Anda menyelesaikan kisah ini.`
+            };
+        }
+    });
+
+    const storyData = {
+        id: editingStoryId || ('custom_' + Date.now()),
+        title: title,
+        genre: genre,
+        rewardXp: xp,
+        nodes: nodes,
+        isCustom: true,
+        createdBy: 'Teacher',
+        createdAt: new Date().toISOString()
+    };
+
+    if (isLocalMode) {
+        let customStories = JSON.parse(localStorage.getItem('eq_custom_stories') || '[]');
+        const existingIdx = customStories.findIndex(s => s.id === storyData.id);
+        if (existingIdx !== -1) {
+            customStories[existingIdx] = storyData;
+        } else {
+            customStories.push(storyData);
+        }
+        localStorage.setItem('eq_custom_stories', JSON.stringify(customStories));
+    } else {
+        const storyDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'customStories', storyData.id);
+        setDoc(storyDocRef, storyData);
+    }
+
+    showMessageModal("✅ Story berhasil disimpan!");
+    cancelStoryEdit();
+    renderTeacherStories();
+}
+
+function loadCustomStoryForEdit(storyId) {
+    const customStories = getCustomStories();
+    const story = customStories.find(s => s.id === storyId);
+    if (!story) return;
+
+    editingStoryId = storyId;
+    document.getElementById('story-title-input').value = story.title;
+    document.getElementById('story-genre-input').value = story.genre.toLowerCase();
+    document.getElementById('story-xp-input').value = story.rewardXp;
+
+    // Convert nodes object ke array tempStoryNodes
+    tempStoryNodes = Object.entries(story.nodes).map(([nodeId, nodeData]) => ({
+        id: nodeId,
+        imagePrompt: nodeData.imagePrompt || '',
+        imageUrl: nodeData.imageUrl || '',
+        text: nodeData.text || '',
+        choices: (nodeData.choices || []).map(c => ({ text: c.text, target: c.target }))
+    }));
+    
+    // Pastikan node 'start' ada di urutan pertama
+    const startIdx = tempStoryNodes.findIndex(n => n.id === 'start');
+    if (startIdx > 0) {
+        const startNode = tempStoryNodes.splice(startIdx, 1)[0];
+        tempStoryNodes.unshift(startNode);
+    }
+
+    document.getElementById('story-editor-form').classList.remove('hidden');
+    renderStoryNodesEditor();
+    window.scrollTo({ top: document.getElementById('story-editor-form').offsetTop, behavior: 'smooth' });
+}
+
+function deleteCustomStory(storyId) {
+showConfirmModal("Hapus story ini secara permanen?", async () => {
+if (isLocalMode) {
+let customStories = JSON.parse(localStorage.getItem('eq_custom_stories') || '[]');
+customStories = customStories.filter(s => s.id !== storyId);
+localStorage.setItem('eq_custom_stories', JSON.stringify(customStories));
+} else {
+const storyDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'customStories', storyId);
+await deleteDoc(storyDocRef);
+}
+renderTeacherStories();
+showMessageModal("Story berhasil dihapus.");
+}, "Ya, Hapus");
+}
+
+function renderTeacherStories() {
+const container = document.getElementById('teacher-story-list');
+if (!container) return;
+
+const customStories = getCustomStories();
+
+if (customStories.length === 0) {
+container.innerHTML = '<div class="text-center py-6 text-remover text-xs italic">Belum ada custom story. Klik tombol "Buat Story Baru" di atas untuk membuat story pertamamu.</div>';
+return;
+}
+
+container.innerHTML = customStories.map(story => {
+const icon = story.genre === 'HORROR' ? '🏚️' : story.genre === 'ADVENTURE' ? '🎈' : '🕵️‍♂️';
+return `
+<div class="p-3 bg-darkBg border border-darkBorder rounded-lg flex justify-between items-center text-xs">
+<div class="flex items-center gap-3">
+<span class="text-xl">${icon}</span>
+<div>
+<span class="font-bold text-f1f5f9">${story.title}</span>
+<span class="text-remover ml-2">(${story.genre}, ${Object.keys(story.nodes).length} nodes)</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="edit-story-btn text-indigo-400 hover:text-indigo-300 px-2" data-story-id="${story.id}"><i class="fa-solid fa-edit"></i></button>
+<button class="delete-story-btn text-rose-500 hover:text-rose-400 px-2" data-story-id="${story.id}"><i class="fa-solid fa-trash"></i></button>
+</div>
+</div>
+`;
+}).join('');
+
+container.querySelectorAll('.edit-story-btn').forEach(btn => {
+btn.onclick = () => loadCustomStoryForEdit(btn.getAttribute('data-story-id'));
+});
+container.querySelectorAll('.delete-story-btn').forEach(btn => {
+btn.onclick = () => deleteCustomStory(btn.getAttribute('data-story-id'));
+});
+}
+
+function renderStoryLobby() {
+const container = document.getElementById('story-lobby-list');
+if (!container) return;
+
+const customStories = getCustomStories();
+
+const allStories = [
+{ id: 'horror', title: storyPlots.horror.title, genre: 'HORROR', rewardXp: storyPlots.horror.rewardXp, isDefault: true, desc: 'Menyelidiki sebuah rumah kuno berhantu yang dilingkupi kegelapan bayang-bayang.' },
+{ id: 'adventure', title: storyPlots.adventure.title, genre: 'ADVENTURE', rewardXp: storyPlots.adventure.rewardXp, isDefault: true, desc: 'Mengarungi lautan langit menggunakan armada balon udara untuk mencari kristal ajaib.' },
+{ id: 'mystery', title: storyPlots.mystery.title, genre: 'MYSTERY', rewardXp: storyPlots.mystery.rewardXp, isDefault: true, desc: 'Selidiki berhentinya waktu secara misterius di kota mekanis kuno. Analisis buktinya!' },
+...customStories.map(s => ({ id: s.id, title: s.title, genre: s.genre, rewardXp: s.rewardXp, isCustom: true, desc: 'Custom story interaktif dibuat oleh Teacher.' }))
+];
+
+container.innerHTML = allStories.map(story => {
+const genreColors = {
+'HORROR': { bg: 'from-rose-950 to-red-900', border: 'rose', text: 'rose-400', icon: '🏚️' },
+'ADVENTURE': { bg: 'from-emerald-950 to-teal-900', border: 'emerald', text: 'emerald-400', icon: '🎈' },
+'MYSTERY': { bg: 'from-amber-950 to-amber-900', border: 'amber', text: 'amber-400', icon: '🕵️‍♂️' },
+'CUSTOM': { bg: 'from-indigo-950 to-purple-900', border: 'indigo', text: 'indigo-400', icon: '📖' }
+};
+const colors = genreColors[story.genre] || genreColors['CUSTOM'];
+
+return `
+<div onclick="startStory('${story.id}')"
+class="p-4 rounded-2xl glass-card border-${colors.border}-500/20 hover:border-${colors.border}-500/60 cursor-pointer transition flex gap-4">
+<div class="w-20 h-20 bg-gradient-to-br ${colors.bg} rounded-xl flex items-center justify-center text-4xl shadow-inner shrink-0 border border-${colors.border}-500/30">
+${colors.icon}
+</div>
+<div class="space-y-0.5 flex-1">
+<span class="text-[9px] font-bold px-2 py-0.5 rounded bg-${colors.border}-500/10 text-${colors.text} border border-${colors.border}-500/20">${story.genre}</span>
+<h4 class="font-fantasy font-bold text-sm text-f1f5f9">${story.title} ${story.isCustom ? '<span class="text-[9px] text-indigo-400 ml-1">(Custom by Teacher)</span>' : ''}</h4>
+<p class="text-[11px] text-remover leading-relaxed">${story.desc}</p>
+<span class="text-[10px] text-gold font-bold block pt-1"><i class="fa-solid fa-trophy mr-1"></i> Reward: Up to ${story.rewardXp} XP</span>
+</div>
+</div>
+`;
+}).join('');
+}
+
+// --- CORE FUNCTIONS ---
+function calculateTotalStats() {
+let stats = {
+weaponAtk: runState.weapon ? runState.weapon.atk : 0,
+flatAtkBonus: 0,
+totalBlock: 0,
+goldMultiplier: 1.0,
+tenseMultiplierBonus: 0.0,
+maxHp: 100
+};
+runState.inventory.forEach(item => {
+if (item.type === "shield" && item.block) stats.totalBlock += item.block;
+if (item.flatAtkBonus) stats.flatAtkBonus += item.flatAtkBonus;
+if (item.maxHpBonus) stats.maxHp += item.maxHpBonus;
+if (item.goldBoost) stats.goldMultiplier += (item.goldBoost - 1.0);
+if (item.tenseMultiplierBonus) stats.tenseMultiplierBonus += item.tenseMultiplierBonus;
+});
+stats.finalAtk = stats.weaponAtk + stats.flatAtkBonus;
+return stats;
+}
+
+function calculateAcademicStats(xp) {
+let level, score, nextXp, baseScore, relXp, steps, color;
+if (xp < 256) {
+level = 'D'; baseScore = 0; nextXp = 256;
+steps = Math.floor(xp / 64);
+score = baseScore + (steps * 10);
+color = 'rose';
+return { level, score, nextXp, currentLvlXp: xp, color };
+} else if (xp < 768) {
+level = 'C'; baseScore = 40; nextXp = 512;
+relXp = xp - 256;
+steps = Math.floor(relXp / 128);
+score = baseScore + (steps * 5);
+color = 'emerald';
+return { level, score, nextXp, currentLvlXp: relXp, color };
+} else if (xp < 2816) {
+level = 'B'; baseScore = 60; nextXp = 2048;
+relXp = xp - 768;
+steps = Math.floor(relXp / 512);
+score = baseScore + (steps * 6.25);
+color = 'indigo';
+return { level, score, nextXp, currentLvlXp: relXp, color };
+} else {
+level = 'A'; baseScore = 85; nextXp = 16384;
+relXp = Math.min(xp - 2816, 16384);
+steps = Math.floor(relXp / 4096);
+score = baseScore + (steps * 3.75);
+color = 'amber';
+return { level, score: Math.min(score, 100), nextXp, currentLvlXp: relXp, color };
+}
+}
+
+const startApp = async () => {
+initVocabTooltipListeners();
+if (isLocalMode) {
+console.log("Starting in Local Sandbox Mode (Offline).");
+document.getElementById('loading-overlay').classList.add('hidden');
+syncQuestsLocal();
+syncUsersLocal();
+initStoryEditorListeners();
+return;
+}
+try {
+let userCredential;
+if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+userCredential = await signInWithCustomToken(authService, __initial_auth_token);
+} else {
+userCredential = await signInAnonymously(authService);
+}
+currentUser = userCredential.user;
+document.getElementById('loading-overlay').classList.add('hidden');
+syncQuestsFromFirebase();
+syncUsersFromFirebase();
+initStoryEditorListeners();
+} catch (error) {
+console.error("Auth initialization failed:", error);
+isLocalMode = true;
+document.getElementById('loading-overlay').classList.add('hidden');
+syncQuestsLocal();
+syncUsersLocal();
+initStoryEditorListeners();
+}
+};
+
+function syncQuestsLocal() {
+let localQuests = localStorage.getItem('eq_local_quests');
+if (!localQuests) {
+globalQuests = [
+{
+id: "q_default_1",
+title: "Greeting & Attention",
+desc: "Vocabulary dasar perkenalan & respon percakapan Kelas 8.",
+diff: "Easy",
+xp: 30,
+icon: "😊",
+questions: [
+{ q: "What is the correct response to 'How do you do?'", options: ["How do you do?", "I am fine, thank you", "Nice to meet you"], answer: "How do you do?" },
+{ q: "Lengkapi: 'Good morning class, ... everyone?'", options: ["How are", "What are", "Who are"], answer: "How are" },
+{ q: "Expression to ask for attention is ...", options: ["Attention, please!", "Goodbye", "Thank you"], answer: "Attention, please!" }
+]
+},
+{
+id: "q_default_2",
+title: "Past Tense Explorer",
+desc: "Materi Recount Text. Menggunakan verb bentuk lampau.",
+diff: "Medium",
+xp: 45,
+icon: "⏳",
+questions: [
+{ q: "Yesterday, my family ... to the zoo.", options: ["go", "went", "gone"], answer: "went" },
+{ q: "They ... some funny monkeys last week.", options: ["see", "saw", "seeing"], answer: "saw" }
+]
+}
+];
+localStorage.setItem('eq_local_quests', JSON.stringify(globalQuests));
+} else {
+globalQuests = JSON.parse(localQuests);
+}
+renderTeacherQuests();
+}
+
+function syncUsersLocal() {
+let localUsers = localStorage.getItem('eq_local_users');
+if (!localUsers) {
+globalUsers = [
+{ name: "Raja Arthur", personalBest: 350, xp: 400, completed: ["q_default_1"], unlockedVocab: [] },
+{ name: "Ksatria Lancelot", personalBest: 180, xp: 200, completed: [], unlockedVocab: [] }
+];
+localStorage.setItem('eq_local_users', JSON.stringify(globalUsers));
+} else {
+globalUsers = JSON.parse(localUsers);
+}
+renderLeaderboard();
+}
+
+function syncQuestsFromFirebase() {
+onSnapshot(questsCollectionRef, (snap) => {
+let list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+globalQuests = list; renderTeacherQuests();
+if(activeGamemode === "academy") { renderAcademyQuests(); }
+}, (error) => {
+console.error("Firebase sync error on Quests: ", error);
+});
+}
+
+function syncUsersFromFirebase() {
+onSnapshot(usersCollectionRef, (snap) => {
+let list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+globalUsers = list;
+renderLeaderboard();
+if (currentUserData) {
+let updatedMe = globalUsers.find(u => u.name.toLowerCase() === currentUserData.name.toLowerCase());
+if (updatedMe) {
+currentUserData = updatedMe;
+if (!currentUserData.unlockedVocab) currentUserData.unlockedVocab = [];
+updateUserDashboardUI();
+}
+}
+}, (error) => {
+console.error("Firebase sync error on Users: ", error);
+});
+}
+
+async function auth(type) {
+const nameInput = document.getElementById('auth-name').value.trim();
+const passInput = document.getElementById('auth-pass').value;
+if(!nameInput || !passInput) return showMessageModal("Mohon isi nama lengkap dan password rahasiamu.");
+document.getElementById('btn-login').disabled = true;
+document.getElementById('btn-signup').disabled = true;
+const docId = nameInput.toLowerCase().replace(/\s+/g, '_');
+if (isLocalMode) {
+let userExists = globalUsers.find(u => u.name.toLowerCase() === nameInput.toLowerCase());
+if (type === 'signup') {
+if (userExists) {
+showMessageModal("Nama petualang ini sudah terdaftar di game lokal.");
+} else {
+const newUser = { name: nameInput, pass: passInput, personalBest: 0, xp: 0, completed: [], unlockedVocab: [] };
+globalUsers.push(newUser);
+localStorage.setItem('eq_local_users', JSON.stringify(globalUsers));
+renderLeaderboard();
+showMessageModal("Pendaftaran Berhasil! 🎉 Silakan klik tombol Masuk.");
+document.getElementById('auth-pass').value = "";
+}
+} else {
+let userMatch = globalUsers.find(u => u.name.toLowerCase() === nameInput.toLowerCase() && u.pass === passInput);
+if (!userMatch) {
+userMatch = { name: nameInput, pass: passInput, personalBest: 0, xp: 0, completed: [], unlockedVocab: [] };
+globalUsers.push(userMatch);
+localStorage.setItem('eq_local_users', JSON.stringify(globalUsers));
+renderLeaderboard();
+}
+currentUserData = userMatch;
+if(!currentUserData.unlockedVocab) currentUserData.unlockedVocab = [];
+showView('student');
+}
+document.getElementById('btn-login').disabled = false;
+document.getElementById('btn-signup').disabled = false;
+return;
+}
+if (!currentUser) {
+showMessageModal("Gagal menyinkronkan status server auth.");
+document.getElementById('btn-login').disabled = false;
+document.getElementById('btn-signup').disabled = false;
+return;
+}
+const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', docId);
+try {
+const docSnap = await getDoc(userDocRef);
+if (type === 'signup') {
+if (docSnap.exists()) {
+showMessageModal("Nama petualang ini sudah terdaftar. Silakan gunakan nama lain.");
+} else {
+await setDoc(userDocRef, { name: nameInput, pass: passInput, personalBest: 0, xp: 0, completed: [], unlockedVocab: [] });
+showMessageModal("Pendaftaran Berhasil! 🎉 Silakan klik tombol Masuk.");
+}
+} else {
+if (!docSnap.exists() || docSnap.data().pass !== passInput) {
+showMessageModal("Nama lengkap atau password salah.");
+} else {
+currentUserData = { id: docSnap.id, ...docSnap.data() };
+if(!currentUserData.unlockedVocab) currentUserData.unlockedVocab = [];
+showView('student');
+}
+}
+} catch (e) { showMessageModal("Masalah koneksi database cloud."); }
+finally {
+document.getElementById('btn-login').disabled = false;
+document.getElementById('btn-signup').disabled = false;
+}
+}
+
+function logout() { currentUserData = null; location.reload(); }
+
+function showView(view) {
+    ['auth-section', 'student-section', 'teacher-section'].forEach(v => document.getElementById(v).classList.add('hidden'));
+    document.getElementById('user-pills').classList.add('hidden');
+    
+    if(view === 'student') {
+        // === FIX: Cek login dulu sebelum masuk student ===
+        if (!currentUserData) {
+            document.getElementById('auth-section').classList.remove('hidden');
+            return;
+        }
+        document.getElementById('student-section').classList.remove('hidden');
+        document.getElementById('user-pills').classList.remove('hidden');
+        document.getElementById('pills-name').innerText = currentUserData.name;
+        switchToHub();
+    } 
+    else if(view === 'teacher') {
+        // === FIX #1: Cek login DULU sebelum cek nama ===
+        if (!currentUserData) {
+            showMessageModal("🔒 <b>Akses Ditolak!</b><br>Silakan login terlebih dahulu dengan akun <b>Teacher</b>.");
+            document.getElementById('auth-section').classList.remove('hidden');
+            return;
+        }
+        
+        // === FIX #2: Cek nama Teacher ===
+        if (currentUserData.name.toLowerCase().trim() !== 'teacher') {
+            showMessageModal(`🔒 <b>Akses Ditolak!</b><br>Panel guru hanya untuk akun <b>Teacher</b>.<br><br>Akun Anda saat ini: <i class="text-rose-400">${currentUserData.name}</i>`);
+            
+            // === FIX #3: Tampilkan student section LANGSUNG, jangan recursive call ===
+            document.getElementById('student-section').classList.remove('hidden');
+            document.getElementById('user-pills').classList.remove('hidden');
+            document.getElementById('pills-name').innerText = currentUserData.name;
+            switchToHub();
+            return;
+        }
+        
+        // Lolos validasi → buka Teacher Section
+        document.getElementById('teacher-section').classList.remove('hidden');
+        document.getElementById('user-pills').classList.remove('hidden');
+        document.getElementById('pills-name').innerText = currentUserData.name;
+        renderTeacherQuests();
+        renderTeacherStories();
+    } 
+    else {
+        document.getElementById('auth-section').classList.remove('hidden');
+    }
+}
+
+function updateUserDashboardUI() {
+if (!currentUserData) return;
+const stats = calculateAcademicStats(currentUserData.xp || 0);
+document.getElementById('display-name').innerText = currentUserData.name;
+const scoreEl = document.getElementById('display-score');
+scoreEl.innerText = stats.score % 1 === 0 ? stats.score : stats.score.toFixed(1);
+const lvlBadge = document.getElementById('level-badge');
+lvlBadge.innerText = `LEVEL ${stats.level}`;
+lvlBadge.className = `level-badge border-${stats.color}-500 text-${stats.color}-400 bg-${stats.color}-500/10`;
+document.getElementById('display-xp-total').innerText = currentUserData.xp || 0;
+document.getElementById('display-xp-needed').innerText = `${Math.floor(stats.currentLvlXp)} / ${stats.nextXp} XP`;
+const pct = (stats.currentLvlXp / stats.nextXp) * 100;
+document.getElementById('xp-bar').style.width = `${pct}%`;
+const avatars = { 'D': '😊', 'C': '🧙‍♂️', 'B': '🛡️', 'A': '👑' };
+document.getElementById('avatar').innerText = avatars[stats.level] || '🧙‍♂️';
+document.getElementById('display-dungeon-pb').innerText = currentUserData.personalBest || 0;
+renderLeaderboard();
+}
+
+function toggleLeaderboard(mode) {
+leaderboardMode = mode;
+const btnDungeon = document.getElementById('toggle-lbl-dungeon');
+const btnAcademy = document.getElementById('toggle-lbl-academy');
+if (mode === "dungeon") {
+btnDungeon.className = "flex-1 py-1.5 rounded-lg text-gold font-bold bg-gold/15 transition-all";
+btnAcademy.className = "flex-1 py-1.5 rounded-lg text-remover hover:text-f1f5f9 transition-all";
+} else {
+btnAcademy.className = "flex-1 py-1.5 rounded-lg text-gold font-bold bg-gold/15 transition-all";
+btnDungeon.className = "flex-1 py-1.5 rounded-lg text-remover hover:text-f1f5f9 transition-all";
+}
+renderLeaderboard();
+}
+
+function renderLeaderboard() {
+const body = document.getElementById('leaderboard-body'); body.innerHTML = "";
+const headerCol = document.getElementById('leaderboard-header-col');
+if (leaderboardMode === 'dungeon') {
+headerCol.innerText = "Max Score";
+const sorted = [...globalUsers].sort((a, b) => (b.personalBest || 0) - (a.personalBest || 0));
+sorted.forEach((u, i) => {
+const isMe = currentUserData && u.name.toLowerCase() === currentUserData.name.toLowerCase();
+body.innerHTML += `
+<tr class="hover:bg-darkBorder/30 transition ${isMe ? 'bg-gold/10 border-l-2 border-l-gold' : ''}">
+<td class="py-3.5 pl-2 font-bold ${i < 3 ? 'text-gold font-fantasy' : 'text-remover'}">#${i+1}</td>
+<td class="py-3.5 font-semibold text-f1f5f9">${u.name}</td>
+<td class="py-3.5 text-right font-bold text-gold font-mono pr-2">${u.personalBest || 0}</td>
+</tr>
+`;
+});
+} else {
+headerCol.innerText = "Nilai / XP";
+const sorted = [...globalUsers].sort((a, b) => (b.xp || 0) - (a.xp || 0));
+sorted.forEach((u, i) => {
+const stats = calculateAcademicStats(u.xp || 0);
+const isMe = currentUserData && u.name.toLowerCase() === currentUserData.name.toLowerCase();
+body.innerHTML += `
+<tr class="hover:bg-darkBorder/30 transition ${isMe ? 'bg-gold/10 border-l-2 border-l-gold' : ''}">
+<td class="py-3.5 pl-2 font-bold ${i < 3 ? 'text-gold font-fantasy' : 'text-remover'}">#${i+1}</td>
+<td class="py-3.5 font-semibold text-f1f5f9">
+<span class="text-xs px-1.5 py-0.5 rounded bg-darkBg border border-darkBorder font-bold text-${stats.color}-400 mr-1">${stats.level}</span>
+${u.name}
+</td>
+<td class="py-3.5 text-right font-bold text-emerald-400 font-mono pr-2">
+${stats.score % 1 === 0 ? stats.score : stats.score.toFixed(1)} <span class="text-[9px] text-remover">(${u.xp || 0} XP)</span>
+</td>
+</tr>
+`;
+});
+}
+}
+
+function switchToHub() {
+activeGamemode = "hub";
+['view-hub', 'view-academy', 'view-dungeon', 'view-story'].forEach(v => document.getElementById(v).classList.add('hidden'));
+document.getElementById('view-hub').classList.remove('hidden');
+document.getElementById('btn-return-hub').classList.add('hidden');
+document.getElementById('run-stats-card').classList.add('hidden');
+updateUserDashboardUI();
+}
+
+function switchToAcademy() {
+activeGamemode = "academy";
+['view-hub', 'view-academy', 'view-dungeon', 'view-story'].forEach(v => document.getElementById(v).classList.add('hidden'));
+document.getElementById('view-academy').classList.remove('hidden');
+document.getElementById('btn-return-hub').classList.remove('hidden');
+document.getElementById('run-stats-card').classList.add('hidden');
+renderAcademyQuests();
+}
+
+function switchToDungeon() {
+activeGamemode = "dungeon";
+['view-hub', 'view-academy', 'view-dungeon', 'view-story'].forEach(v => document.getElementById(v).classList.add('hidden'));
+document.getElementById('view-dungeon').classList.remove('hidden');
+document.getElementById('btn-return-hub').classList.remove('hidden');
+if (runActive) {
+document.getElementById('screen-idle').classList.add('hidden');
+document.getElementById('screen-run').classList.remove('hidden');
+document.getElementById('run-stats-card').classList.remove('hidden');
+} else {
+document.getElementById('screen-idle').classList.remove('hidden');
+document.getElementById('screen-run').classList.add('hidden');
+document.getElementById('run-stats-card').classList.add('hidden');
+}
+}
+
+function switchToStoryPortal() {
+activeGamemode = "story";
+['view-hub', 'view-academy', 'view-dungeon', 'view-story'].forEach(v => document.getElementById(v).classList.add('hidden'));
+document.getElementById('view-story').classList.remove('hidden');
+document.getElementById('story-lobby').classList.remove('hidden');
+document.getElementById('story-viewport').classList.add('hidden');
+document.getElementById('btn-return-hub').classList.remove('hidden');
+document.getElementById('run-stats-card').classList.add('hidden');
+renderStoryLobby();
+}
+
+function renderAcademyQuests() {
+const list = document.getElementById('quest-list');
+list.innerHTML = "";
+document.getElementById('quest-count').innerText = `${globalQuests.length} quests available`;
+globalQuests.forEach(q => {
+const isCompleted = currentUserData.completed && currentUserData.completed.includes(q.id);
+let diffColor = q.diff === 'Easy' ? 'emerald' : q.diff === 'Medium' ? 'amber' : q.diff === 'Hard' ? 'rose' : 'purple';
+let icon = q.icon || '📜';
+list.innerHTML += `
+<div class="p-5 rounded-2xl glass-card flex justify-between items-center gap-4 ${isCompleted ? 'opacity-40 border-l-darkBorder' : `border-l-2 border-l-${diffColor}-500 shadow-sm`}">
+<div class="flex items-center gap-4">
+<div class="text-3xl">${icon}</div>
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-bold px-2 py-0.5 rounded bg-${diffColor}-500/10 text-${diffColor}-400 border border-${diffColor}-500/20">${q.diff}</span>
+<h4 class="font-bold text-f1f5f9">${q.title}</h4>
+</div>
+<p class="text-xs text-remover">${q.desc || 'Deskripsi materi klan pembelajaran.'}</p>
+<p class="text-[11px] text-remover mt-1">${q.questions ? q.questions.length : 0} Challenge(s) • <span class="text-gold font-bold">+${q.xp} XP</span></p>
+</div>
+</div>
+${isCompleted ? '<i class="fa-solid fa-check-circle text-emerald-500 text-3xl pr-2"></i>' :
+`<button onclick="startAcademyQuiz('${q.id}')" class="bg-gold text-darkBg hover:bg-accentLight px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2">
+<i class="fa-solid fa-play"></i> Mulai
+</button>`}
+</div>
+`;
+});
+}
+
+function startAcademyQuiz(questId) {
+currentQuizData = globalQuests.find(q => q.id === questId);
+if(!currentQuizData || !currentQuizData.questions || currentQuizData.questions.length === 0) {
+return showMessageModal("Quest ini belum memiliki soal.");
+}
+currentQuestionIndex = 0;
+quizAnswers = [];
+document.getElementById('quiz-modal').classList.remove('hidden');
+renderQuizQuestion();
+}
+
+function closeQuiz() {
+document.getElementById('quiz-modal').classList.add('hidden');
+currentQuizData = null;
+}
+
+function renderQuizQuestion() {
+const totalQuestions = currentQuizData.questions.length;
+const currentQ = currentQuizData.questions[currentQuestionIndex];
+const shuffledOptions = [...currentQ.options].sort(() => Math.random() - 0.5);
+const pct = (currentQuestionIndex / totalQuestions) * 100;
+document.getElementById('quiz-content').innerHTML = `
+<div class="border-b border-darkBorder pb-4">
+<div class="flex justify-between items-center text-xs mono text-remover mb-2">
+<span>${currentQuizData.title}</span>
+<span>Challenge ${currentQuestionIndex + 1} of ${totalQuestions}</span>
+</div>
+<div class="w-full bg-darkBg h-1 rounded-full overflow-hidden">
+<div class="bg-gold h-full transition-all" style="width: ${pct}%"></div>
+</div>
+</div>
+<h3 class="text-xl font-semibold text-f1f5f9 leading-snug">${currentQ.q}</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+${shuffledOptions.map((opt, i) => `
+<button onclick="submitQuizAnswer('${opt.replace(/'/g, "\\'")}')" class="group flex items-center gap-4 bg-darkBg hover:bg-gold/10 border border-darkBorder hover:border-gold p-4 rounded-2xl text-left transition-all duration-200 shadow-inner">
+<div class="mono text-xs font-bold w-8 h-8 rounded-full border border-darkBorder group-hover:border-gold flex items-center justify-center text-remover group-hover:text-gold">${String.fromCharCode(65 + i)}</div>
+<span class="text-f1f5f9 font-medium flex-1 text-sm">${opt}</span>
+</button>
+`).join('')}
+</div>
+`;
+}
+
+function submitQuizAnswer(selectedOption) {
+const currentQ = currentQuizData.questions[currentQuestionIndex];
+quizAnswers.push({
+question: currentQ.q,
+selected: selectedOption,
+correct: selectedOption === currentQ.answer
+});
+currentQuestionIndex++;
+if (currentQuestionIndex < currentQuizData.questions.length) {
+renderQuizQuestion();
+} else {
+renderQuizResults();
+}
+}
+
+function renderQuizResults() {
+const correctCount = quizAnswers.filter(a => a.correct).length;
+const totalQuestions = currentQuizData.questions.length;
+const isPerfect = correctCount === totalQuestions;
+let resultIcon = isPerfect ? '🎉' : '😓';
+let resultTitle = isPerfect ? 'Quest Completed!' : 'Quest Failed!';
+let resultDesc = isPerfect ?
+`Luar biasa! Kamu menyelesaikan semua kuis challenge dengan benar.` :
+`Ups! Kamu salah ${totalQuestions - correctCount} soal. Pelajari kembali materinya dan coba lagi ya.`;
+document.getElementById('quiz-content').innerHTML = `
+<div class="text-center space-y-4 pt-6">
+<div class="text-7xl">${resultIcon}</div>
+<h3 class="text-3xl font-bold ${isPerfect ? 'text-emerald-400' : 'text-rose-400'}">${resultTitle}</h3>
+<p class="text-remover max-w-md mx-auto text-xs leading-relaxed">${resultDesc}</p>
+<div class="flex justify-center gap-6 pt-5 mono border-t border-darkBorder mt-6">
+<div class="text-center">
+<div class="text-xs text-remover mb-1">Score</div>
+<div class="text-2xl font-bold ${isPerfect ? 'text-emerald-400' : 'text-f1f5f9'}">${correctCount} / ${totalQuestions}</div>
+</div>
+<div class="text-center">
+<div class="text-xs text-remover mb-1">XP Gained</div>
+<div class="text-2xl font-bold ${isPerfect ? 'text-gold' : 'text-remover'}">+${isPerfect ? currentQuizData.xp : 0} XP</div>
+</div>
+</div>
+<div class="pt-8">
+<button onclick="${isPerfect ? `finalizeQuestXp('${currentQuizData.id}')` : 'closeQuiz()'}" class="${isPerfect ? 'bg-gold text-darkBg hover:bg-accentLight' : 'bg-darkCard hover:bg-remover/20 border border-darkBorder'} px-8 py-3 rounded-xl font-bold transition">
+${isPerfect ? 'Ambil Reward XP & Kembali' : 'Tutup & Coba Lagi'}
+</button>
+</div>
+</div>
+`;
+}
+
+async function finalizeQuestXp(questId) {
+if (!currentUserData) return;
+if (!currentUserData.completed) currentUserData.completed = [];
+if (currentUserData.completed.includes(questId)) {
+closeQuiz();
+return;
+}
+currentUserData.completed.push(questId);
+currentUserData.xp = (currentUserData.xp || 0) + currentQuizData.xp;
+if (isLocalMode) {
+let idx = globalUsers.findIndex(u => u.name.toLowerCase() === currentUserData.name.toLowerCase());
+if (idx !== -1) {
+globalUsers[idx].xp = currentUserData.xp;
+globalUsers[idx].completed = currentUserData.completed;
+}
+localStorage.setItem('eq_local_users', JSON.stringify(globalUsers));
+updateUserDashboardUI();
+} else {
+const docId = currentUserData.name.toLowerCase().replace(/\s+/g, '_');
+const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', docId);
+try {
+await updateDoc(userDocRef, {
+xp: currentUserData.xp,
+completed: currentUserData.completed
+});
+} catch (e) {
+console.error("Gagal sinkronisasi XP ke cloud: ", e);
+}
+}
+closeQuiz();
+switchToAcademy();
+}
+
+function startDungeonRun() {
+document.getElementById('screen-idle').classList.add('hidden');
+document.getElementById('screen-run').classList.remove('hidden');
+document.getElementById('run-stats-card').classList.remove('hidden');
+const chosenStarter = Math.random() < 0.5 ? gameItems.RustyDagger : gameItems.WoodenStaff;
+runActive = true;
+runState = {
+stage: 1, score: 0, hp: 100, gold: 15,
+weapon: chosenStarter, inventory: [chosenStarter],
+usedWords: [], recentSentences: [], currentEncounter: null
+};
+updateRunStatsUI(); generateEncounter();
+}
+
+function updateRunStatsUI() {
+const totalStats = calculateTotalStats();
+document.getElementById('run-stage').innerText = runState.stage;
+document.getElementById('run-hp').innerText = `${runState.hp} / ${totalStats.maxHp}`;
+document.getElementById('run-gold').innerText = runState.gold;
+document.getElementById('run-score').innerText = runState.score;
+document.getElementById('encounter-stage-score').innerText = runState.score;
+const hpPct = Math.max(0, Math.min(100, (runState.hp / totalStats.maxHp) * 100));
+const hpBarInner = document.getElementById('hp-bar-inner');
+if (hpBarInner) {
+hpBarInner.style.width = `${hpPct}%`;
+}
+document.getElementById('weapon-icon').innerText = runState.weapon.icon;
+document.getElementById('weapon-name').innerText = runState.weapon.name;
+document.getElementById('weapon-atk-info').innerText = totalStats.finalAtk;
+document.getElementById('stat-total-block').innerText = `+${totalStats.totalBlock}`;
+document.getElementById('stat-gold-boost').innerText = `${totalStats.goldMultiplier.toFixed(1)}x`;
+document.getElementById('stat-flat-atk').innerText = `+${totalStats.flatAtkBonus}`;
+document.getElementById('stat-tense-bonus').innerText = `+${totalStats.tenseMultiplierBonus.toFixed(1)}x`;
+const invList = document.getElementById('inventory-list'); invList.innerHTML = "";
+runState.inventory.forEach((item, index) => {
+invList.innerHTML += `
+<button onclick="openItemActionModal(${index})" title="${item.name}: ${item.desc}" class="w-8 h-8 rounded-lg bg-darkBg hover:bg-darkCard border border-darkBorder hover:border-gold flex items-center justify-center text-sm cursor-pointer shadow-sm transition-all duration-200">
+${item.icon}
+</button>
+`;
+});
+document.getElementById('vocab-run-count').innerText = runState.usedWords.length;
+}
+
+function generateEncounter() {
+['view-battle', 'view-chest', 'view-merchant', 'view-result'].forEach(v => document.getElementById(v).classList.add('hidden'));
+const rng = Math.random();
+if (runState.stage % 2 !== 0) {
+runState.currentEncounter = rng < 0.7 ? "battle" : "chest";
+} else {
+runState.currentEncounter = rng < 0.4 ? "battle" : rng < 0.7 ? "chest" : "merchant";
+}
+if(runState.currentEncounter === "battle") setupBattleEncounter();
+else if(runState.currentEncounter === "chest") setupChestEncounter();
+else setupMerchantEncounter();
+updateRunStatsUI();
+}
+
+function setupBattleEncounter() {
+document.getElementById('view-battle').classList.remove('hidden');
+document.getElementById('encounter-badge').innerText = "MONSTER ENCOUNTER ⚔️";
+const mTemplate = monsters[Math.floor(Math.random() * monsters.length)];
+const scale = 1 + (runState.stage - 1) * 0.15;
+runState.currentMonster = {
+name: mTemplate.name, icon: mTemplate.icon,
+hp: Math.round(mTemplate.baseHp * scale), maxHp: Math.round(mTemplate.baseHp * scale),
+atk: Math.round(mTemplate.baseAtk * scale), exp: mTemplate.exp
+};
+rollNextTenseBoost(); document.getElementById('sentence-input').value = ""; updateBattleUI();
+}
+
+function rollNextTenseBoost() {
+runState.currentTenseBoost = tenses[Math.floor(Math.random() * tenses.length)];
+document.getElementById('tense-boost-multiplier').innerText = `${runState.currentTenseBoost.name} (${runState.currentTenseBoost.mul}x ATK)`;
+document.getElementById('tense-boost-description').innerText = runState.currentTenseBoost.desc;
+}
+
+function updateBattleUI() {
+const totalStats = calculateTotalStats();
+document.getElementById('battle-player-hp').innerText = `HP: ${runState.hp} / ${totalStats.maxHp}`;
+document.getElementById('monster-icon').innerText = runState.currentMonster.icon;
+document.getElementById('monster-name').innerText = runState.currentMonster.name;
+document.getElementById('battle-monster-hp').innerText = `HP: ${runState.currentMonster.hp} / ${runState.currentMonster.maxHp}`;
+document.getElementById('monster-hp-bar').style.width = `${Math.max(0, (runState.currentMonster.hp / runState.currentMonster.maxHp) * 100)}%`;
+}
+
+function executeBattleTurn() {
+if (isTurnProcessing) return;
+const input = document.getElementById('sentence-input').value.trim();
+if (input.length < 5) return showMessageModal("Tulislah kalimat bahasa Inggris utuh untuk menyerang!");
+const cleanInput = input.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+const words = cleanInput.split(/\s+/).filter(w => w !== "");
+if (runState.recentSentences.includes(cleanInput)) return showMessageModal("Kalimat ini baru saja kamu gunakan!");
+isTurnProcessing = true;
+runState.recentSentences.push(cleanInput);
+if(runState.recentSentences.length > 2) runState.recentSentences.shift();
+let newWordsCount = 0;
+let newlyDiscovered = [];
+words.forEach(w => {
+if (w.length > 2 && !runState.usedWords.includes(w)) {
+newWordsCount++; newlyDiscovered.push(w);
+}
+});
+newlyDiscovered.forEach(w => runState.usedWords.push(w));
+let vocabMul = 1.0 + (newWordsCount * 0.25);
+let matched = false;
+const target = runState.currentTenseBoost.id;
+if (target === "present") matched = /\b(is|am|are|do|does|have|has|go|eat|play|run|see)\b/i.test(input) && !/(ed\b|\bing\b|was|were|did|had)/i.test(input);
+else if (target === "past") matched = /(was|were|did|had|went|saw|bought|ate|ran|ed\b)/i.test(input);
+else if (target === "present_cont") matched = /\b(is|am|are)\b\s+\w+ing/i.test(input);
+else if (target === "past_cont") matched = /\b(was|were)\b\s+\w+ing/i.test(input);
+else if (target === "past_perfect") matched = /\bhad\b\s+\w+(ed|en|ne|seen|done|eaten|run)/i.test(input);
+const totalStats = calculateTotalStats();
+let tMul = matched ? runState.currentTenseBoost.mul : 1.0;
+if (matched) {
+tMul += totalStats.tenseMultiplierBonus;
+}
+if (runState.weapon.id === "GrammarSpellbook" && matched) tMul *= 1.5;
+let activeTomeBonus = 1.0;
+let usedTomeWords = [];
+rareVocabPool.forEach(v => {
+if (currentUserData && currentUserData.unlockedVocab && currentUserData.unlockedVocab.includes(v.word)) {
+const regex = new RegExp(`\\b${v.word}\\b`, "i");
+if (regex.test(input)) {
+activeTomeBonus += (v.mul - 1.0);
+usedTomeWords.push(v.word);
+}
+}
+});
+const finalDamage = Math.round(totalStats.finalAtk * vocabMul * tMul * activeTomeBonus);
+runState.currentMonster.hp -= finalDamage;
+const sprite = document.getElementById('monster-sprite-container');
+sprite.classList.add('monster-shake'); setTimeout(() => sprite.classList.remove('monster-shake'), 400);
+updateBattleUI();
+let log = `Kamu menghasilkan **${finalDamage} damage**! ` + (matched ? "🎉 Tense Boost Aktif! " : "⚠️ Tense Mismatch. ");
+if (usedTomeWords.length > 0) {
+log += `<br>📖 **Tome Bonus Aktif!** Menggunakan kosa kata langka: <span class="text-indigo-400 capitalize font-bold">${usedTomeWords.join(', ')}</span> (+${((activeTomeBonus - 1.0) * 100).toFixed(0)}% damage!)`;
+}
+showMessageModal(log, () => {
+if (runState.currentMonster.hp <= 0) {
+handleBattleVictory();
+} else {
+executeMonsterCounterAttack();
+}
+});
+}
+
+function executeMonsterCounterAttack() {
+const totalStats = calculateTotalStats();
+let mAtk = runState.currentMonster.atk;
+mAtk = Math.max(1, mAtk - totalStats.totalBlock);
+runState.hp -= mAtk;
+updateRunStatsUI();
+updateBattleUI();
+showMessageModal(`👹 **${runState.currentMonster.name}** menyerang balik dan menghasilkan **${mAtk} damage**!`, () => {
+if(runState.hp <= 0) {
+handleGameOver();
+} else {
+isTurnProcessing = false;
+rollNextTenseBoost();
+document.getElementById('sentence-input').value = "";
+resetAttackButton();
+}
+});
+}
+
+function handleBattleVictory() {
+isTurnProcessing = false;
+resetAttackButton();
+const totalStats = calculateTotalStats();
+let gold = Math.round(runState.currentMonster.exp * 0.6 * totalStats.goldMultiplier);
+runState.gold += gold; runState.score += runState.currentMonster.exp * 5;
+const droppedPage = (Math.random() < 0.20);
+document.getElementById('view-battle').classList.add('hidden');
+document.getElementById('view-result').classList.remove('hidden');
+let descStr = `Monster tumbang!<br>💰 **+${gold} Gold** & ⭐ **+${runState.currentMonster.exp * 5} Score**`;
+document.getElementById('result-description').innerHTML = descStr;
+updateRunStatsUI();
+if (droppedPage) {
+setTimeout(() => {
+unlockRandomVocab();
+}, 800);
+}
+}
+
+function setupChestEncounter() {
+document.getElementById('view-chest').classList.remove('hidden');
+document.getElementById('encounter-badge').innerText = "TREASURE CHEST 💎";
+}
+
+function openTreasureChest() {
+const roll = Math.random();
+if (roll < 0.35) {
+unlockRandomVocab();
+runState.score += 50;
+document.getElementById('view-chest').classList.add('hidden');
+document.getElementById('view-result').classList.remove('hidden');
+updateRunStatsUI();
+} else if (roll < 0.70) {
+const pool = Object.values(gameItems).filter(i => i.cost > 0);
+const item = pool[Math.floor(Math.random() * pool.length)];
+runState.inventory.push(item);
+if (item.type === "weapon" && item.atk > runState.weapon.atk) runState.weapon = item;
+document.getElementById('result-description').innerHTML = `Peti berisi item premium: **${item.icon} ${item.name}**!<br><span class="text-xs text-remover">(${item.desc})</span>`;
+runState.score += 50;
+document.getElementById('view-chest').classList.add('hidden');
+document.getElementById('view-result').classList.remove('hidden');
+updateRunStatsUI();
+} else {
+const gold = Math.round(15 + Math.random() * 25); runState.gold += gold;
+document.getElementById('result-description').innerHTML = `Mendapat bonus mutlak **💰 +${gold} Gold Coins**!`;
+runState.score += 50;
+document.getElementById('view-chest').classList.add('hidden');
+document.getElementById('view-result').classList.remove('hidden');
+updateRunStatsUI();
+}
+}
+
+function setupMerchantEncounter() {
+document.getElementById('view-merchant').classList.remove('hidden');
+document.getElementById('encounter-badge').innerText = "MYSTICAL MERCHANT 🛒";
+const grid = document.getElementById('merchant-grid'); grid.innerHTML = "";
+const pool = Object.values(gameItems).filter(i => i.cost > 0).sort(() => 0.5 - Math.random()).slice(0, 4);
+pool.forEach(item => {
+grid.innerHTML += `
+<div class="merchant-item p-4 bg-darkBg/60 rounded-2xl border border-darkBorder flex justify-between items-center text-xs">
+<div class="pr-2">
+<span class="text-xl">${item.icon}</span>
+<strong>${item.name}</strong>
+<p class="text-remover text-[10px] mt-0.5">${item.desc}</p>
+</div>
+<button onclick="buyMerchantItem('${item.id}', ${item.cost})" class="bg-gold text-darkBg hover:bg-accentHover px-3 py-1.5 rounded-xl font-bold font-fantasy shrink-0">💰 ${item.cost}G</button>
+</div>`;
+});
+}
+
+function buyMerchantItem(id, cost) {
+if(runState.gold < cost) return showMessageModal("Emas kamu tidak cukup.");
+const item = gameItems[id]; runState.gold -= cost;
+const totalStats = calculateTotalStats();
+if(item.type === "consumable") {
+runState.hp = Math.min(totalStats.maxHp, runState.hp + item.heal);
+} else {
+runState.inventory.push(item);
+if (item.type === "weapon" && item.atk > runState.weapon.atk) runState.weapon = item;
+}
+showMessageModal(`Berhasil membeli ${item.name}!`); updateRunStatsUI(); setupMerchantEncounter();
+}
+
+function finishMerchantEncounter() {
+runState.score += 20; document.getElementById('view-merchant').classList.add('hidden');
+document.getElementById('view-result').classList.remove('hidden'); document.getElementById('result-description').innerText = "Melanjutkan perjalanan...";
+}
+
+function advanceToNextStage() { runState.stage++; generateEncounter(); }
+
+async function handleGameOver() {
+runActive = false; isTurnProcessing = false;
+resetAttackButton();
+const score = runState.score;
+if(currentUserData && score > (currentUserData.personalBest || 0)) {
+currentUserData.personalBest = score;
+if (isLocalMode) {
+let idx = globalUsers.findIndex(u => u.name.toLowerCase() === currentUserData.name.toLowerCase());
+if (idx !== -1) {
+globalUsers[idx].personalBest = score;
+}
+localStorage.setItem('eq_local_users', JSON.stringify(globalUsers));
+updateUserDashboardUI();
+} else {
+const docId = currentUserData.name.toLowerCase().replace(/\s+/g, '_');
+try {
+await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', docId), { personalBest: score });
+} catch (e) {
+console.error("Gagal sinkronisasi skor ke cloud: ", e);
+}
+}
+}
+document.getElementById('screen-run').classList.add('hidden');
+document.getElementById('screen-idle').classList.remove('hidden');
+document.getElementById('run-stats-card').classList.add('hidden');
+showMessageModal(`GAME OVER! Petualangan terhenti di Lantai ${runState.stage}. Skor akhir Anda: **${score}**.<br>${score > (currentUserData?.personalBest || 0) ? '🎉 **REKOR BARU TERCATAT!**' : ''}`);
+}
+
+function resetAttackButton() {
+const attackBtn = document.getElementById('attack-btn');
+if (attackBtn) {
+attackBtn.disabled = false;
+attackBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+attackBtn.innerHTML = `<i class="fa-solid fa-wand-sparkles"></i> EXECUTING ATTACK SENTENCE!`;
+}
+}
+
+function abandonRun() {
+showConfirmModal("Apakah kamu yakin ingin mengakhiri petualangan sekarang?", () => {
+handleGameOver();
+}, "Ya, Menyerah");
+}
+
+function openItemActionModal(index) {
+const item = runState.inventory[index];
+if (!item) return;
+const modal = document.getElementById('item-action-modal');
+const content = document.getElementById('item-action-content');
+const totalStats = calculateTotalStats();
+const sellPrice = Math.max(2, Math.round((item.cost || 10) * 0.4));
+let actionButtons = "";
+if (item.type === "consumable") {
+actionButtons += `
+<button onclick="useConsumable(${index})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-bold font-fantasy transition flex items-center justify-center gap-2">
+🧪 Gunakan (+${item.heal} HP)
+</button>
+`;
+} else if (item.type === "weapon") {
+if (runState.weapon === item) {
+actionButtons += `<p class="text-xs text-emerald-400 font-bold bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20">🗡️ Sedang Dipakai</p>`;
+} else {
+actionButtons += `
+<button onclick="equipWeapon(${index})" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl font-bold font-fantasy transition">
+🛡️ Lengkapi (Equip)
+</button>
+`;
+}
+} else if (item.type === "shield") {
+actionButtons += `<p class="text-xs text-teal-400 bg-teal-500/10 p-2 rounded-xl border border-teal-500/20">🛡️ Pasif (Efek Blokir Otomatis Menumpuk)</p>`;
+}
+const isCurrentWeapon = (item.type === "weapon" && runState.weapon === item);
+if (isCurrentWeapon) {
+actionButtons += `<p class="text-[10px] text-remover">Gunakan/Equip senjata lain terlebih dahulu sebelum menjual ini.</p>`;
+} else {
+actionButtons += `
+<button onclick="sellInventoryItem(${index})" class="w-full bg-amber-600/20 hover:bg-amber-600 border border-amber-500/40 text-amber-300 hover:text-darkBg py-2.5 rounded-xl font-bold font-fantasy transition">
+💰 Jual (+${sellPrice} Gold)
+</button>
+`;
+}
+content.innerHTML = `
+<div class="text-center space-y-2">
+<div class="text-5xl mb-2">${item.icon}</div>
+<h4 class="text-lg font-fantasy text-gold">${item.name}</h4>
+<span class="px-2.5 py-0.5 rounded text-[10px] uppercase font-bold bg-darkBg text-remover border border-darkBorder">${item.type}</span>
+<p class="text-xs text-remover px-4 leading-relaxed">${item.desc}</p>
+</div>
+<div class="space-y-2 pt-2 border-t border-darkBorder/50">
+${actionButtons}
+</div>
+`;
+modal.classList.remove('hidden');
+}
+
+function closeItemActionModal() {
+document.getElementById('item-action-modal').classList.add('hidden');
+}
+
+function useConsumable(index) {
+const item = runState.inventory[index];
+if (!item || item.type !== "consumable") return;
+const totalStats = calculateTotalStats();
+runState.hp = Math.min(totalStats.maxHp, runState.hp + item.heal);
+runState.inventory.splice(index, 1);
+closeItemActionModal();
+updateRunStatsUI();
+if (activeGamemode === "dungeon" && runState.currentEncounter === "battle") {
+updateBattleUI();
+}
+showMessageModal(`Kamu menggunakan **${item.name}** dan memulihkan **${item.heal} HP**!`);
+}
+
+function equipWeapon(index) {
+const item = runState.inventory[index];
+if (!item || item.type !== "weapon") return;
+runState.weapon = item;
+closeItemActionModal();
+updateRunStatsUI();
+if (activeGamemode === "dungeon" && runState.currentEncounter === "battle") {
+updateBattleUI();
+}
+showMessageModal(`Berhasil mengganti senjata aktif: **${item.name}**!`);
+}
+
+function sellInventoryItem(index) {
+const item = runState.inventory[index];
+if (!item) return;
+const sellPrice = Math.max(2, Math.round((item.cost || 10) * 0.4));
+runState.gold += sellPrice;
+runState.inventory.splice(index, 1);
+closeItemActionModal();
+updateRunStatsUI();
+if (activeGamemode === "dungeon" && runState.currentEncounter === "battle") {
+updateBattleUI();
+}
+showMessageModal(`Berhasil menjual **${item.name}** seharga **💰 ${sellPrice} Gold**!`);
+}
+
+async function unlockRandomVocab() {
+if (!currentUserData) return;
+if (!currentUserData.unlockedVocab) currentUserData.unlockedVocab = [];
+const lockedPool = rareVocabPool.filter(v => !currentUserData.unlockedVocab.includes(v.word));
+if (lockedPool.length === 0) return;
+const picked = lockedPool[Math.floor(Math.random() * lockedPool.length)];
+currentUserData.unlockedVocab.push(picked.word);
+if (isLocalMode) {
+let idx = globalUsers.findIndex(u => u.name.toLowerCase() === currentUserData.name.toLowerCase());
+if (idx !== -1) {
+globalUsers[idx].unlockedVocab = currentUserData.unlockedVocab;
+}
+localStorage.setItem('eq_local_users', JSON.stringify(globalUsers));
+} else {
+const docId = currentUserData.name.toLowerCase().replace(/\s+/g, '_');
+try {
+await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', docId), {
+unlockedVocab: currentUserData.unlockedVocab
+});
+} catch (e) {
+console.error("Gagal sinkronisasi Tome ke cloud: ", e);
+}
+}
+showMessageModal(`📖 **Halaman Tome Kuno Ditemukan!**<br>Kamu berhasil mempelajari kosakata langka baru:<br><span class="text-gold font-bold text-lg">"${picked.word}"</span> (${picked.type})<br><span class="text-xs text-remover italic">"${picked.def}"</span>`);
+}
+
+function openTomeOfKnowledge() {
+if (!currentUserData) return;
+if (!currentUserData.unlockedVocab) currentUserData.unlockedVocab = [];
+const listContainer = document.getElementById('tome-list');
+listContainer.innerHTML = "";
+rareVocabPool.forEach(v => {
+const isUnlocked = currentUserData.unlockedVocab.includes(v.word);
+if (isUnlocked) {
+listContainer.innerHTML += `
+<div class="p-4 bg-indigo-950/40 border border-indigo-500/40 rounded-2xl flex justify-between items-start gap-3">
+<div>
+<div class="flex items-center gap-2">
+<span class="text-gold font-bold text-base capitalize">${v.word}</span>
+<span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase font-bold">${v.type}</span>
+</div>
+<p class="text-xs text-slate-300 mt-1">${v.def}</p>
+</div>
+<div class="text-right shrink-0">
+<span class="text-[9px] text-remover uppercase block font-mono">Multiplier</span>
+<span class="text-emerald-400 font-bold font-mono text-sm">+${((v.mul - 1.0) * 100).toFixed(0)}% ATK</span>
+</div>
+</div>
+`;
+} else {
+listContainer.innerHTML += `
+<div class="p-4 bg-darkBg/60 border border-darkBorder rounded-2xl flex justify-between items-center gap-3 opacity-55">
+<div class="flex items-center gap-3">
+<span class="text-2xl text-remover">🔒</span>
+<div>
+<span class="text-remover font-bold text-base">••••••••</span>
+<p class="text-[10px] text-remover">Halaman kosakata belum ditemukan di Dungeon.</p>
+</div>
+</div>
+<span class="text-xs text-remover font-mono">+??%</span>
+</div>
+`;
+}
+});
+document.getElementById('tome-modal').classList.remove('hidden');
+}
+
+function closeTomeOfKnowledge() {
+document.getElementById('tome-modal').classList.add('hidden');
+}
+
+// =======================================================
+// --- CHRONICLES OF CHOICE STORY ENGINE ---
+// =======================================================
+function getActiveStory() {
+// Check custom stories first
+const customStories = getCustomStories();
+const customStory = customStories.find(s => s.id === currentStoryId);
+if (customStory) return customStory;
+return storyPlots[currentStoryId];
+}
+
+function startStory(storyId) {
+currentStoryId = storyId;
+currentStoryNode = "start";
+const story = getActiveStory();
+if (!story) {
+showMessageModal("Story tidak ditemukan!");
+switchToStoryPortal();
+return;
+}
+document.getElementById('story-lobby').classList.add('hidden');
+document.getElementById('story-viewport').classList.remove('hidden');
+document.getElementById('story-title').innerText = story.title;
+document.getElementById('story-genre-badge').innerText = story.genre;
+let badgeColors = { HORROR: 'rose', ADVENTURE: 'emerald', MYSTERY: 'amber', CUSTOM: 'indigo' };
+let color = badgeColors[story.genre] || 'indigo';
+document.getElementById('story-genre-badge').className = `px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-${color}-500/10 text-${color}-400 border border-${color}-500/20`;
+loadStoryNode();
+}
+
+function exitStoryToLobby() {
+showConfirmModal("Apakah kamu yakin ingin keluar dari cerita ini? Progress bercabangmu saat ini tidak akan disimpan.", () => {
+switchToStoryPortal();
+}, "Ya, Keluar");
+}
+
+function loadStoryNode() {
+    const story = getActiveStory();
+    if (!story) {
+        showMessageModal("Story tidak ditemukan!");
+        return;
+    }
+    const node = story.nodes[currentStoryNode];
+    if (!node) {
+        showMessageModal(`Node "${currentStoryNode}" tidak ditemukan!`);
+        return;
+    }
+    
+    let formattedText = parseDialogueText(node.text);
+    document.getElementById('story-dialogue-text').innerHTML = formattedText;
+    
+    // === FIX: Pastikan element ada sebelum digunakan ===
+    const loader = document.getElementById('story-image-loader');
+    const imgEl = document.getElementById('story-panel-image');
+    const fallbackEl = document.getElementById('story-panel-fallback');
+    
+    if (!imgEl || !loader || !fallbackEl) {
+        console.error("❌ Story panel elements missing! Rendering SVG fallback only.");
+        if (fallbackEl) {
+            drawScenicFallbackSVG(story.genre.toLowerCase(), node.imagePrompt || '');
+        }
+    } else if (node.imageUrl) {
+        // Use uploaded custom image
+        fallbackEl.innerHTML = "";
+        imgEl.src = node.imageUrl;
+        imgEl.onload = () => {
+            loader.classList.add('hidden');
+            imgEl.classList.remove('hidden');
+        };
+        imgEl.onerror = () => {
+            console.warn("⚠️ Custom image failed to load. Using fallback.");
+            triggerScenePanelGeneration(node.imagePrompt || story.genre, currentStoryId);
+        };
+    } else {
+        triggerScenePanelGeneration(node.imagePrompt, currentStoryId);
+    }
+    
+    // Render branches choice buttons
+    const choicesContainer = document.getElementById('story-choices-container');
+    choicesContainer.innerHTML = "";
+    if (node.choices && node.choices.length > 0) {
+        node.choices.forEach(choice => {
+            choicesContainer.innerHTML += `
+                <button onclick="chooseStoryPath('${choice.target}')" class="w-full bg-indigo-950/40 hover:bg-indigo-600 border border-indigo-500/30 hover:border-indigo-400 text-slate-200 hover:text-white py-2 rounded-xl text-xs font-bold transition duration-200">
+                    ${choice.text} ➔
+                </button>
+            `;
+        });
+    } else if (node.result) {
+        let btnColor = node.result.status === 'bad' ? 'rose' : 'emerald';
+        choicesContainer.innerHTML += `
+            <button onclick="claimStoryReward(${node.result.xp}, '${node.result.status}')" class="w-full bg-${btnColor}-600 hover:bg-${btnColor}-500 text-white py-2.5 rounded-xl text-xs font-bold tracking-wide transition shadow-glow-${btnColor}">
+                <i class="fa-solid fa-gift mr-1"></i> Selesaikan Kisah & Klaim XP (+${node.result.xp} XP)
+            </button>
+        `;
+    }
+}
+
+function chooseStoryPath(targetNode) {
+const story = getActiveStory();
+if (!story || !story.nodes[targetNode]) {
+showMessageModal(`Node "${targetNode}" tidak ditemukan. Pastikan target choice sudah benar.`);
+return;
+}
+currentStoryNode = targetNode;
+loadStoryNode();
+}
+
+async function claimStoryReward(xp, status) {
+if (xp > 0 && currentUserData) {
+currentUserData.xp = (currentUserData.xp || 0) + xp;
+if (isLocalMode) {
+let idx = globalUsers.findIndex(u => u.name.toLowerCase() === currentUserData.name.toLowerCase());
+if (idx !== -1) {
+globalUsers[idx].xp = currentUserData.xp;
+}
+localStorage.setItem('eq_local_users', JSON.stringify(globalUsers));
+updateUserDashboardUI();
+} else {
+const docId = currentUserData.name.toLowerCase().replace(/\s+/g, '_');
+try {
+await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', docId), {
+xp: currentUserData.xp
+});
+} catch (e) {
+console.error("Gagal sinkronisasi reward cerita ke cloud: ", e);
+}
+}
+}
+const story = getActiveStory();
+const node = story.nodes[currentStoryNode];
+showMessageModal(node.result.msg, () => {
+switchToStoryPortal();
+});
+}
+
+function parseDialogueText(rawText) {
+let processed = rawText;
+storyVocabDatabase.forEach(item => {
+const regex = new RegExp(`\\b(${item.word})\\b`, 'gi');
+processed = processed.replace(regex, `<span class="vocab-word text-indigo-400 hover:text-gold border-b border-dashed border-indigo-400 hover:border-gold font-bold transition duration-150 cursor-help" data-word="${item.word}" data-type="${item.type}" data-trans="${item.trans}" data-def="${item.def}">$1</span>`);
+});
+return processed;
+}
+
+function initVocabTooltipListeners() {
+const tooltip = document.getElementById('vocab-tooltip');
+document.body.addEventListener('mouseover', (e) => {
+const target = e.target.closest('.vocab-word');
+if (!target) return;
+document.getElementById('tooltip-word').innerText = target.getAttribute('data-word');
+document.getElementById('tooltip-type').innerText = target.getAttribute('data-type');
+document.getElementById('tooltip-trans').innerText = `Arti: ${target.getAttribute('data-trans')}`;
+document.getElementById('tooltip-def').innerText = target.getAttribute('data-def');
+tooltip.classList.remove('hidden');
+tooltip.style.opacity = 1;
+});
+document.body.addEventListener('mousemove', (e) => {
+const target = e.target.closest('.vocab-word');
+if (!target) {
+tooltip.classList.add('hidden');
+return;
+}
+tooltip.style.left = `${e.pageX - tooltip.offsetWidth / 2}px`;
+tooltip.style.top = `${e.pageY - tooltip.offsetHeight - 18}px`;
+});
+document.body.addEventListener('mouseout', (e) => {
+if (e.target.closest('.vocab-word')) {
+tooltip.classList.add('hidden');
+}
+});
+document.body.addEventListener('touchstart', (e) => {
+const target = e.target.closest('.vocab-word');
+if (!target) {
+tooltip.classList.add('hidden');
+return;
+}
+document.getElementById('tooltip-word').innerText = target.getAttribute('data-word');
+document.getElementById('tooltip-type').innerText = target.getAttribute('data-type');
+document.getElementById('tooltip-trans').innerText = `Arti: ${target.getAttribute('data-trans')}`;
+document.getElementById('tooltip-def').innerText = target.getAttribute('data-def');
+const touch = e.touches[0];
+tooltip.style.left = `${touch.pageX - tooltip.offsetWidth / 2}px`;
+tooltip.style.top = `${touch.pageY - tooltip.offsetHeight - 25}px`;
+tooltip.classList.remove('hidden');
+});
+document.body.addEventListener('touchend', (e) => {
+if (e.target.closest('.vocab-word')) {
+setTimeout(() => tooltip.classList.add('hidden'), 1500);
+}
+});
+}
+
+async function triggerScenePanelGeneration(promptText, genre) {
+    const loader = document.getElementById('story-image-loader');
+    const imgEl = document.getElementById('story-panel-image');
+    const fallbackEl = document.getElementById('story-panel-fallback');
+    
+    // === FIX: Pastikan semua element ada ===
+    if (!loader || !imgEl || !fallbackEl) {
+        console.error("❌ Story panel elements missing! Cannot render scene.");
+        return;
+    }
+    
+    loader.classList.remove('hidden');
+    imgEl.classList.add('hidden');
+    fallbackEl.innerHTML = "";
+    
+    const apiKey = "";
+    
+    // ⚡ INSTANT FALLBACK: Skip API call jika apiKey kosong
+    if (!apiKey || apiKey.trim() === "") {
+        console.log("⚡ No API key configured. Using SVG Fallback instantly.");
+        drawScenicFallbackSVG(genre, promptText);
+        loader.classList.add('hidden');
+        return;
+    }
+    
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+    const payload = {
+        instances: { prompt: `${promptText}, detailed comic panel art, gothic colorful steampunk fantasy, dramatic lights, masterpiece, high anime resolution` },
+        parameters: { sampleCount: 1 }
+    };
+    
+    async function fetchWithExponentialBackoff(url, requestOptions, retries = 3, delay = 1000) {
+        try {
+            const response = await fetch(url, requestOptions);
+            if (response.status === 429 && retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return fetchWithExponentialBackoff(url, requestOptions, retries - 1, delay * 2);
+            }
+            return response;
+        } catch (err) {
+            if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return fetchWithExponentialBackoff(url, requestOptions, retries - 1, delay * 2);
+            }
+            throw err;
+        }
+    }
+    
+    try {
+        const response = await fetchWithExponentialBackoff(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+            const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+            imgEl.src = imageUrl;
+            imgEl.onload = () => {
+                loader.classList.add('hidden');
+                imgEl.classList.remove('hidden');
+            };
+            return;
+        }
+    } catch (err) {
+        console.log("Imagen API not reachable. Switching to SVG Fallback.");
+    }
+    
+    drawScenicFallbackSVG(genre, promptText);
+    loader.classList.add('hidden');
+}
+
+function drawScenicFallbackSVG(genre, prompt) {
+const fallbackEl = document.getElementById('story-panel-fallback');
+let svgCode = "";
+if (genre === "horror") {
+svgCode = `
+<svg viewBox="0 0 400 260" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="horrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+<stop offset="0%" style="stop-color:#05020c;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#2a0815;stop-opacity:1" />
+</linearGradient>
+</defs>
+<rect width="100%" height="100%" fill="url(#horrorGrad)" />
+<circle cx="200" cy="90" r="45" fill="#fef08a" opacity="0.15" />
+<circle cx="200" cy="90" r="35" fill="#fef08a" opacity="0.3" />
+<path d="M -20 280 L 120 180 L 220 220 L 420 190 L 420 280 Z" fill="#0c0414" />
+<path d="M 110 180 L 115 150 L 105 150 Z" fill="#450a0a" />
+<rect x="107" y="150" width="6" height="40" fill="#1e1b4b" />
+<circle cx="150" cy="160" r="2.5" fill="#ef4444" />
+<circle cx="260" cy="155" r="2.5" fill="#ef4444" />
+<text x="50%" y="85%" font-family="monospace" font-size="10" fill="#f87171" opacity="0.4" text-anchor="middle">🏚️ WHISPERING MANOR ACTIVE</text>
+</svg>
+`;
+} else if (genre === "adventure") {
+svgCode = `
+<svg viewBox="0 0 400 260" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+<stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+<stop offset="50%" style="stop-color:#1e1b4b;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+</linearGradient>
+</defs>
+<rect width="100%" height="100%" fill="url(#skyGrad)" />
+<path d="M 50 140 Q 150 120 280 145 T 320 160 L 250 210 L 100 190 Z" fill="#1e293b" stroke="#334155" />
+<path d="M 80 110 L 140 100 L 110 70 Z" fill="#047857" opacity="0.7" />
+<ellipse cx="280" cy="70" rx="35" ry="20" fill="#fbbf24" opacity="0.2" />
+<ellipse cx="280" cy="70" rx="28" ry="15" fill="#fbbf24" opacity="0.4" />
+<rect x="265" y="85" width="30" height="8" fill="#d97706" opacity="0.5" />
+<text x="50%" y="85%" font-family="monospace" font-size="10" fill="#34d399" opacity="0.4" text-anchor="middle">🎈 ARCHIPELAGO ACTIVE</text>
+</svg>
+`;
+} else {
+svgCode = `
+<svg viewBox="0 0 400 260" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="mysteryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+<stop offset="0%" style="stop-color:#020617;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
+</linearGradient>
+</defs>
+<rect width="100%" height="100%" fill="url(#mysteryGrad)" />
+<circle cx="200" cy="110" r="70" stroke="#b45309" stroke-width="2" fill="none" opacity="0.2" />
+<circle cx="200" cy="110" r="55" stroke="#b45309" stroke-width="1.5" fill="none" opacity="0.4" />
+<line x1="200" y1="110" x2="200" y2="65" stroke="#fbbf24" stroke-width="2" opacity="0.7" />
+<line x1="200" y1="110" x2="235" y2="110" stroke="#fbbf24" stroke-width="2" opacity="0.7" />
+<circle cx="200" cy="110" r="6" fill="#fbbf24" />
+<text x="50%" y="85%" font-family="monospace" font-size="10" fill="#fbbf24" opacity="0.4" text-anchor="middle">🕵️‍♂️ CLOCKTOWER CONUNDRUM</text>
+</svg>
+`;
+}
+fallbackEl.innerHTML = svgCode;
+}
+
+// =======================================================
+// --- TEACHER CONSOLE CONTROLLERS ---
+// =======================================================
+function addQuestionToForm() {
+const q = document.getElementById('temp-q-text').value.trim();
+const o1 = document.getElementById('temp-q-opt1').value.trim();
+const o2 = document.getElementById('temp-q-opt2').value.trim();
+const o3 = document.getElementById('temp-q-opt3').value.trim();
+if(!q || !o1 || !o2) {
+return showMessageModal("Mohon lengkapi Pertanyaan, Pilihan 1 (BENAR), dan Pilihan 2!");
+}
+tempQuestionsForForm.push({
+q,
+options: [o1, o2, o3].filter(o => o !== ""),
+answer: o1
+});
+document.getElementById('form-questions-preview').innerText = `${tempQuestionsForForm.length} Soal terdaftar.`;
+document.getElementById('temp-q-text').value = "";
+document.getElementById('temp-q-opt1').value = "";
+document.getElementById('temp-q-opt2').value = "";
+document.getElementById('temp-q-opt3').value = "";
+}
+
+async function saveFinalQuest() {
+const title = document.getElementById('q-title').value.trim();
+const desc = document.getElementById('q-desc').value.trim();
+const diff = document.getElementById('q-diff').value;
+const xpVal = parseInt(document.getElementById('q-xp').value) || 50;
+if(!title || tempQuestionsForForm.length === 0) {
+return showMessageModal("Harap lengkapi Judul Quest dan minimal tambahkan 1 Soal!");
+}
+const qId = 'q_' + Date.now();
+const icons = { 'Easy': '😊', 'Medium': '⏳', 'Hard': '🐉', 'Insane': '👑' };
+const newQuest = {
+id: qId,
+title,
+desc,
+diff,
+xp: xpVal,
+icon: icons[diff] || '📜',
+questions: tempQuestionsForForm
+};
+if (isLocalMode) {
+globalQuests.push(newQuest);
+localStorage.setItem('eq_local_quests', JSON.stringify(globalQuests));
+renderTeacherQuests();
+if (activeGamemode === "academy") {
+renderAcademyQuests();
+}
+tempQuestionsForForm = [];
+document.getElementById('form-questions-preview').innerText = "";
+document.getElementById('q-title').value = "";
+document.getElementById('q-desc').value = "";
+document.getElementById('q-xp').value = "";
+showMessageModal("Quest Berhasil Diterbitkan Secara Lokal! 🎉");
+return;
+}
+try {
+const questDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'quests', qId);
+await setDoc(questDocRef, newQuest);
+tempQuestionsForForm = [];
+document.getElementById('form-questions-preview').innerText = "";
+document.getElementById('q-title').value = "";
+document.getElementById('q-desc').value = "";
+document.getElementById('q-xp').value = "";
+showMessageModal("Quest Berhasil Diterbitkan ke Cloud! ☁️");
+} catch (error) {
+console.error("Gagal menyimpan quest ke Firestore: ", error);
+showMessageModal("Error: Terjadi kegagalan komunikasi saat mengunggah quest.");
+}
+}
+
+function renderTeacherQuests() {
+const container = document.getElementById('teacher-quest-list');
+container.innerHTML = "";
+if (globalQuests.length === 0) {
+container.innerHTML = `<div class="text-center py-6 text-remover text-xs">Belum ada Quest di database.</div>`;
+return;
+}
+globalQuests.forEach(q => {
+let diffColor = q.diff === 'Easy' ? 'emerald' : q.diff === 'Medium' ? 'amber' : q.diff === 'Hard' ? 'rose' : 'purple';
+container.innerHTML += `
+<div class="p-3 bg-darkBg border border-darkBorder rounded-lg flex justify-between items-center text-xs">
+<div class="flex items-center gap-2">
+<span class="font-bold text-${diffColor}-400 border border-${diffColor}-500/20 bg-${diffColor}-500/10 px-1.5 py-0.5 rounded">${q.diff}</span>
+<span class="text-f1f5f9 font-medium">${q.title}</span>
+<span class="text-remover mono">(${q.questions ? q.questions.length : 0} soal)</span>
+</div>
+<button onclick="deleteQuest('${q.id}')" class="text-rose-500 hover:text-rose-400 transition px-2"><i class="fa-solid fa-trash-alt"></i></button>
+</div>
+`;
+});
+}
+
+function deleteQuest(id) {
+showConfirmModal("Apakah Anda yakin ingin menghapus quest ini secara permanen?", async () => {
+if (isLocalMode) {
+globalQuests = globalQuests.filter(q => q.id !== id);
+localStorage.setItem('eq_local_quests', JSON.stringify(globalQuests));
+renderTeacherQuests();
+if (activeGamemode === "academy") {
+renderAcademyQuests();
+}
+showMessageModal("Quest lokal berhasil dihapus.");
+return;
+}
+try {
+const questDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'quests', id);
+await deleteDoc(questDocRef);
+showMessageModal("Quest cloud berhasil dihapus.");
+} catch (error) {
+console.error("Gagal menghapus quest: ", error);
+showMessageModal("Gagal menghapus quest dari cloud server.");
+}
+}, "Ya, Hapus");
+}
+
+// =======================================================
+// --- CUSTOM MODALS ---
+// =======================================================
+function showMessageModal(msg, onClose) {
+const modal = document.createElement('div');
+modal.className = "fixed inset-0 bg-darkBg/80 backdrop-blur-sm z-50 flex items-center justify-center p-4";
+modal.innerHTML = `
+<div class="glass-card w-full max-w-sm rounded-3xl p-6 text-center space-y-4 border-gold/30 shadow-glow-gold">
+<p class="text-f1f5f9 font-semibold text-sm leading-relaxed">${msg}</p>
+<button class="bg-gold text-darkBg px-6 py-2.5 rounded-xl font-bold font-fantasy w-full">Lanjutkan Petualangan</button>
+</div>`;
+document.body.appendChild(modal);
+modal.querySelector('button').onclick = () => {
+modal.remove();
+if (onClose) onClose();
+};
+}
+
+function showConfirmModal(msg, onConfirm, confirmText = "Lanjutkan") {
+const modal = document.createElement('div');
+modal.className = "fixed inset-0 bg-darkBg/80 backdrop-blur-sm z-50 flex items-center justify-center p-4";
+modal.innerHTML = `
+<div class="glass-card w-full max-w-sm rounded-3xl p-6 text-center space-y-4 border-gold/30 shadow-glow-gold">
+<p class="text-f1f5f9 font-semibold text-sm leading-relaxed">${msg}</p>
+<div class="flex gap-3">
+<button class="btn-no bg-darkCard border border-darkBorder text-gold hover:bg-gold/10 px-4 py-2 rounded-xl font-bold flex-1 text-xs transition">Batal</button>
+<button class="btn-yes bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl font-bold flex-1 text-xs transition">${confirmText}</button>
+</div>
+</div>`;
+document.body.appendChild(modal);
+modal.querySelector('.btn-no').onclick = () => modal.remove();
+modal.querySelector('.btn-yes').onclick = () => {
+modal.remove();
+if (onConfirm) onConfirm();
+};
+}
+
+// 5-click easter egg to open Teacher Panel (PROTECTED: Teacher only)
+let teacherClickCount = 0;
+document.getElementById('main-title').addEventListener('click', () => {
+teacherClickCount++;
+if(teacherClickCount >= 5) {
+teacherClickCount = 0;
+
+// === PROTEKSI: Cek apakah user sudah login sebagai Teacher ===
+if (!currentUserData) {
+showMessageModal("🔒 Akses Ditolak!<br>Silakan login terlebih dahulu dengan akun <b>Teacher</b> untuk mengakses panel guru.");
+return;
+}
+
+const userName = currentUserData.name.toLowerCase().trim();
+if (userName !== 'teacher') {
+showMessageModal(`🔒 Akses Ditolak!<br>Panel ini hanya untuk akun <b>Teacher</b>.<br>Akun Anda: <i>${currentUserData.name}</i>`);
+return;
+}
+
+// Jika lolos validasi, buka Teacher Section
+showView('teacher');
+}
+});
+
+// =======================================================
+// --- STORY EDITOR LISTENERS INITIALIZATION ---
+// =======================================================
+function initStoryEditorListeners() {
+const btnToggle = document.getElementById('btn-toggle-story-editor');
+const btnAddNode = document.getElementById('btn-add-story-node');
+const btnCancel = document.getElementById('btn-cancel-story');
+const btnSave = document.getElementById('btn-save-story');
+
+if (btnToggle) btnToggle.addEventListener('click', toggleStoryEditor);
+if (btnAddNode) btnAddNode.addEventListener('click', addStoryNode);
+if (btnCancel) btnCancel.addEventListener('click', cancelStoryEdit);
+if (btnSave) btnSave.addEventListener('click', saveCustomStory);
+
+renderTeacherStories();
+}
+
+// Jalankan program inisialisasi awal
+startApp();
+
+// =======================================================
+// --- EXPOSING FUNCTIONS TO GLOBAL SCOPE ---
+// =======================================================
+window.auth = auth;
+window.logout = logout;
+window.showView = showView;
+window.switchToHub = switchToHub;
+window.switchToAcademy = switchToAcademy;
+window.switchToDungeon = switchToDungeon;
+window.switchToStoryPortal = switchToStoryPortal;
+window.startStory = startStory;
+window.chooseStoryPath = chooseStoryPath;
+window.exitStoryToLobby = exitStoryToLobby;
+window.claimStoryReward = claimStoryReward;
+window.startAcademyQuiz = startAcademyQuiz;
+window.closeQuiz = closeQuiz;
+window.submitQuizAnswer = submitQuizAnswer;
+window.finalizeQuestXp = finalizeQuestXp;
+window.toggleLeaderboard = toggleLeaderboard;
+window.startDungeonRun = startDungeonRun;
+window.executeBattleTurn = executeBattleTurn;
+window.openTreasureChest = openTreasureChest;
+window.buyMerchantItem = buyMerchantItem;
+window.finishMerchantEncounter = finishMerchantEncounter;
+window.advanceToNextStage = advanceToNextStage;
+window.abandonRun = abandonRun;
+window.addQuestionToForm = addQuestionToForm;
+window.saveFinalQuest = saveFinalQuest;
+window.deleteQuest = deleteQuest;
+window.openTomeOfKnowledge = openTomeOfKnowledge;
+window.closeTomeOfKnowledge = closeTomeOfKnowledge;
+window.openItemActionModal = openItemActionModal;
+window.closeItemActionModal = closeItemActionModal;
+window.useConsumable = useConsumable;
+window.equipWeapon = equipWeapon;
+window.sellInventoryItem = sellInventoryItem;
+window.unlockRandomVocab = unlockRandomVocab;
+
+// Story Editor functions
+window.toggleStoryEditor = toggleStoryEditor;
+window.addStoryNode = addStoryNode;
+window.cancelStoryEdit = cancelStoryEdit;
+window.saveCustomStory = saveCustomStory;
+window.loadCustomStoryForEdit = loadCustomStoryForEdit;
+window.deleteCustomStory = deleteCustomStory;
+window.renderTeacherStories = renderTeacherStories;
+window.renderStoryLobby = renderStoryLobby;
+
+// Theme switcher (simple implementation)
+window.setTheme = function(theme) {
+document.documentElement.setAttribute('data-theme', theme);
+localStorage.setItem('eq_theme', theme);
+};
+
+// Load saved theme
+const savedTheme = localStorage.getItem('eq_theme');
+if (savedTheme) {
+document.documentElement.setAttribute('data-theme', savedTheme);
+}
+</script>
+</body>
+</html>
